@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "",
+    "$id": "https://raw.githubusercontent.com/sc2ad/Sc2adUtils/master/template_lazy.json?token=ACRLOTQNBBV7XHM26OITIQ25AQXEO",
     "title": "config",
     "description": "The config for a network",
     "type": "object",
@@ -31,6 +31,7 @@
                 },
                 "print_freq": {
                     "description": "How often to print",
+                    "minimum": 1,
                     "type": "integer"
                 }
             },
@@ -315,5 +316,14 @@
                 "ckpt"
             ]
         }
-    }
+    },
+    "required": [
+        "common",
+        "data_train",
+        "data_val",
+        "learn",
+        "model",
+        "model_params",
+        "pretrain"
+    ]
 }
