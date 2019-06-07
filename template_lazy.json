@@ -1,0 +1,319 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "",
+    "title": "config",
+    "description": "The config for a network",
+    "type": "object",
+    "properties": {
+        "common": {
+            "description": "A collection of common traits",
+            "type": "object",
+            "properties": {
+                "seed": {
+                    "description": "The seed to use",
+                    "type": "integer"
+                },
+                "vis_GPU": {
+                    "description": "The GPU(s) to use",
+                    "type": "integer"
+                },
+                "log_path": {
+                    "description": "Where to save logs",
+                    "type": "string"
+                },
+                "save_path": {
+                    "description": "Where to save checkpoints",
+                    "type": "string"
+                },
+                "pred_path": {
+                    "description": "Where to save predictions",
+                    "type": "string"
+                },
+                "print_freq": {
+                    "description": "How often to print",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "seed",
+                "vis_GPU",
+                "log_path",
+                "save_path",
+                "pred_path",
+                "print_freq"
+            ]
+        },
+        "data_train": {
+            "description": "A collection of data required for training",
+            "type": "object",
+            "properties": {
+                "data_root": {
+                    "description": "The root pickle file",
+                    "type": "string"
+                },
+                "batch_size": {
+                    "description": "The batch size to use",
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                "im_dims": {
+                    "description": "The dimensions of the images",
+                    "maxItems": 3,
+                    "minItems": 2,
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "crop": {
+                    "description": "A list of how to crop, two per dimension",
+                    "maxItems": 6,
+                    "minItems": 4,
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "num_classes": {
+                    "description": "The number of classes",
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                "idx_classes": {
+                    "description": "The indices of the classes",
+                    "minItems": 1,
+                    "type": "array"
+                },
+                "num_channels": {
+                    "description": "The number of channels",
+                    "minimum": 1,
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "data_root",
+                "batch_size",
+                "im_dims",
+                "crop",
+                "num_classes",
+                "idx_classes",
+                "num_channels"
+            ]
+        },
+        "data_val": {
+            "description": "A collection of data required for validation",
+            "type": "object",
+            "properties": {
+                "data_root": {
+                    "description": "The root pickle file",
+                    "type": "string"
+                },
+                "batch_size": {
+                    "description": "The batch size to use",
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                "im_dims": {
+                    "description": "The dimensions of the images",
+                    "maxItems": 3,
+                    "minItems": 2,
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "crop": {
+                    "description": "A list of how to crop, two per dimension",
+                    "maxItems": 6,
+                    "minItems": 4,
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "num_classes": {
+                    "description": "The number of classes",
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                "idx_classes": {
+                    "description": "The indices of the classes",
+                    "minItems": 1,
+                    "type": "array"
+                },
+                "num_channels": {
+                    "description": "The number of channels",
+                    "minimum": 1,
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "data_root",
+                "batch_size",
+                "im_dims",
+                "crop",
+                "num_classes",
+                "idx_classes",
+                "num_channels"
+            ]
+        },
+        "learn": {
+            "description": "A collection of config for how the model learns",
+            "type": "object",
+            "properties": {
+                "max_steps": {
+                    "description": "The maximum number of steps",
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                "lr": {
+                    "description": "The learning rate to use",
+                    "exclusiveMinimum": 0,
+                    "type": "number"
+                },
+                "optimizer": {
+                    "description": "The optimizer to use",
+                    "type": "string"
+                },
+                "loss": {
+                    "description": "The loss to use",
+                    "type": "string"
+                },
+                "metrics": {
+                    "description": "The metrics to use",
+                    "type": "string"
+                },
+                "weights": {
+                    "description": "The weights to use for each class metric",
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    }
+                },
+                "num_classes": {
+                    "description": "The number of classes",
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                "dataloader": {
+                    "description": "The dataloader class to use",
+                    "type": "string"
+                },
+                "comp": {
+                    "description": "The comps to use",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "key_slice": {
+                    "description": "The key slices to use",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "patience": {
+                    "description": "The number of validation runs for patience",
+                    "type": "integer"
+                },
+                "save_best": {
+                    "description": "Save the best as checkpoints",
+                    "type": "boolean"
+                },
+                "save_pred": {
+                    "description": "Save the predictions",
+                    "type": "boolean"
+                },
+                "keep_prob": {
+                    "description": "The probability of keeping",
+                    "maximum": 1.0,
+                    "exclusiveMinimum": 0,
+                    "type": "number"
+                },
+                "val_freq": {
+                    "description": "The number of steps between validations",
+                    "minimum": 0,
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "max_steps",
+                "lr",
+                "optimizer",
+                "loss",
+                "metrics",
+                "weights",
+                "num_classes",
+                "dataloader",
+                "comp",
+                "key_slice",
+                "patience",
+                "save_best",
+                "save_pred",
+                "keep_prob",
+                "val_freq"
+            ]
+        },
+        "model": {
+            "description": "The name of the model to use",
+            "type": "string"
+        },
+        "model_params": {
+            "description": "The parameters for the model",
+            "type": "object",
+            "properties": {
+                "num_classes": {
+                    "description": "The number of classes",
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                "num_channels": {
+                    "description": "The number of channels",
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                "num_levels": {
+                    "description": "The number of levels",
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                "num_convolutions": {
+                    "description": "The number of convolutions",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "bottom_convolutions": {
+                    "description": "The number of convolutions to do on the bottom",
+                    "minimum": 0,
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "num_classes",
+                "num_channels"
+            ]
+        },
+        "pretrain": {
+            "description": "Contains config for using pretrained models",
+            "type": "object",
+            "properties": {
+                "flag": {
+                    "description": "Whether to load a pretrained model or not",
+                    "type": "boolean"
+                },
+                "ckpt": {
+                    "description": "The path to the checkpoint file",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "flag",
+                "ckpt"
+            ]
+        }
+    }
+}

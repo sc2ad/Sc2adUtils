@@ -1,0 +1,55 @@
+common:
+  seed: 2
+  vis_GPU: '0' #single GPU compatibility
+  log_path: 'training/logs/template/'
+  save_path: 'training/ckpts/template/'
+  pred_path: 'training/pred/template/'
+  print_freq: 15
+
+data_train:
+  data_root: '/data/template.pickle'
+  batch_size: 1
+  im_dims: [344,344,160]
+  crop : !!python/tuple [0, 0, 0, 0, 0, 0]
+  num_classes: 5
+  idx_classes : [0, 1, 2, 3, 4]
+  num_channels: 1
+
+data_val:
+  data_root : '/template.pickle'
+  batch_size: 1
+  im_dims: [344,344,160]
+  crop : !!python/tuple [0, 0, 0, 0, 0, 0]
+  num_classes: 5
+  idx_classes : [0, 1, 2, 3, 4]
+  num_channels: 1
+
+learn:
+  max_steps: 10000 # instead of epochs
+  lr : 0.01
+  optimizer: 'sgd'
+  loss: 'wCE_dice'
+  metrics: 'spatial_dice'
+  weights: [0.01,0.4,0.4,0.7,1]
+  num_classes: 5
+  dataloader: 'data_loader_w_background_flip'
+  comp: ['fem','tib', 'pat','men','background']
+  key_slice: !!python/tuple [40, 55,90, 100, 110 ]
+  patience: 30 # in number of validation runs
+  save_best: False
+  save_pred: True
+  keep_prob : 0.95
+  val_freq : 500 # in steps
+
+model: 'VNet'
+model_params:
+# github.com/MiguelMonteiro/VNet-Tensorflow
+  num_classes: 5
+  num_channels : 8
+  num_levels : 3
+  num_convolutions : !!python/tuple [1, 2, 4]
+  bottom_convolutions : 4
+
+pretrain:
+  flag: False
+  ckpt: '/data/ckpts/template/model.ckpt-0001'
