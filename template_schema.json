@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://raw.githubusercontent.com/sc2ad/Sc2adUtils/master/template_lazy.json?token=ACRLOTQNBBV7XHM26OITIQ25AQXEO",
+    "$id": "https://raw.githubusercontent.com/sc2ad/Sc2adUtils/master/template_schema.json",
     "title": "config",
     "description": "The config for a network",
     "type": "object",
