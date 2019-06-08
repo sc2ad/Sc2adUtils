@@ -7,27 +7,26 @@ def validateJson(js, schema):
     Confirms that a given json follows the given schema.
     Throws a "jsonschema.excpetions.ValidationError" otherwise.
     """
-    assert type(js) == dict, "JSON must be a dictionary!"
-    assert type(schema) == dict, "Schema must be a dictionary!"
-    validate(instance=js, schema=schema)
+    assert type(js) == dict or type(js) == str, "JSON must be a dictionary or string JSON or path!"
+    assert type(schema) == dict or type(schema) == str, "Schema must be a dictionary or string JSON or path!"
+    validate(instance=loadJson(js), schema=loadJson(schema))
 
-def loadJson(string):
+def loadJson(data):
+    if type(data) == dict:
+        return data
     try:
-        return json.loads(string)
+        return json.loads(data)
     except json.JSONDecodeError:
         # This is fine, just need to attempt to load as file
-        with open(string, 'r') as f:
+        with open(data, 'r') as f:
             return json.load(f)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Reads the given config json file and confirms the config schema")
     parser.add_argument("config", help="The JSON config string or file to validate")
-    parser.add_argument("--schema", default="template_lazy.json", help="The JSON schema to follow")
+    parser.add_argument("--schema", default="template_lazy.json", help="The JSON schema to follow or the path to the schema")
 
     args = parser.parse_args()
     
-    js = loadJson(args.config)
-    schema = loadJson(args.schema)
-
     # Throws an error if the JSON is not in the proper format
-    validateJson(js, schema)
+    validateJson(args.config, args.schema)
