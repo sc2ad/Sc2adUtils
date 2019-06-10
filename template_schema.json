@@ -15,7 +15,7 @@
                 },
                 "vis_GPU": {
                     "description": "The GPU(s) to use",
-                    "type": "integer"
+                    "type": "string"
                 },
                 "log_path": {
                     "description": "Where to save logs",

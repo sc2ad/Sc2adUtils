@@ -1,7 +1,7 @@
 {
     "common": {
         "seed": 2,
-        "vis_GPU": 0,
+        "vis_GPU": "0",
         "log_path": "training/logs/template/",
         "save_path": "training/ckpts/template/",
         "pred_path": "training/pred/template/",
