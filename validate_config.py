@@ -5,8 +5,8 @@ try:
     from jsonschema import validate
 except:
     raise ImportError("You must install json schema via pip in order to use this validator!")
-# python -m pip install pyyaml
 try:
+    # python -m pip install pyyaml
     import yaml
     YAML = True
 except ImportError:
@@ -32,7 +32,7 @@ def validateYaml(yaml, schema):
     assert YAML, "Must install PyYAML before attempting to load yaml files!"
     assert type(yaml) == dict or type(yaml) == str, "YAML must be a dictionary or path to a YAML file!"
     assert type(schema) == dict or type(schema) == str, "Schema must be a dictionary or string JSON or path to schema.json!"
-    validate(instance=loadYaml(yaml), schema=loadJson(schema))
+    validate(instance=fixTuples(loadYaml(yaml)), schema=loadJson(schema))
 
 def fixTuples(data):
     for key in data.keys():
@@ -47,10 +47,8 @@ def isJson(data):
 
 def validateData(data, schema):
     if isJson(data):
-        # JSON
         validateJson(data, schema)
     else:
-        # YAML
         validateYaml(data, schema)
 
 def loadAndValidateJson(js, schema):
@@ -105,7 +103,7 @@ def loadYaml(data):
     if type(data) == dict:
         return data
     with open(data, 'r') as stream:
-        return fixTuples(yaml.load(stream, Loader=yaml.FullLoader))
+        return yaml.load(stream, Loader=yaml.FullLoader)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Reads the given config json file and confirms the config schema")
