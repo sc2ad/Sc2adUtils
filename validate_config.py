@@ -1,3 +1,5 @@
+## Validator for config files for dioscoridess
+## Author: Adam Noworolski (Sc2ad)
 import json
 import argparse
 try:
