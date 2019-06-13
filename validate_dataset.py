@@ -39,11 +39,11 @@ def check_files(fileArray, config):
     #HEH!
     # TODO CONFIRM INPUT NUM CHANNELS, OUTPUT NUM CLASSES ARE LEGAL
     # in_sanity = np.concatenate(([config['batch_size']],config['im_dims'],[config['num_channels']]))
-    in_sanity = config['im_dims']
+    in_sanity = tuple(config['im_dims'])
     assert_same(in_sanity, in_data.shape)
 
     # out_sanity = np.concatenate(([config['batch_size']],config['im_dims'],[config['num_classes']]))
-    out_sanity = config['im_dims']
+    out_sanity = tuple(config['im_dims'])
     assert_same(out_sanity, out_data.shape)
 
 def h5_check(file, config, dtype, crop=True):
