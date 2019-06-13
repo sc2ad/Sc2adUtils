@@ -47,7 +47,7 @@ def check_files(fileArray, config):
     out_data = h5_check(output_file, config, dtype=np.uint8, crop=False)
     uniques = np.unique(out_data)
     assert_true(len(uniques) == 2 and 0 in uniques and 1 in uniques, "The image must ONLY contain a binary mask! (0 and 1 ONLY). Instead, it contains the following types of values: " + str(uniques))
-    assert_true(len(config['idx_classes']) <= out_data.shape[len(out_data.shape) - 1], "idx_classes must be <= the channels of the image: " + str(len(config['idx_classes'])) + "<=" + str(out_data.shape[len(out_data.shape) - 1]))
+    assert_true(len(config['idx_classes']) + 1 <= out_data.shape[len(out_data.shape) - 1], "idx_classes must be <= the channels of the image: " + str(len(config['idx_classes']) + 1) + "<=" + str(out_data.shape[len(out_data.shape) - 1]))
     seg = np.zeros((out_data.shape[0], out_data.shape[1], out_data.shape[2], len(config['idx_classes']))).astype('uint8')
 
     seg[:,:,:,:-1] = out_data[:,:,:,config['idx_classes'][:-1]]
