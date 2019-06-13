@@ -8,12 +8,14 @@ import argparse
 
 # Validation Errors are AssertionErrors
 
-def validate_dataset(pickle_load, config):
+def validate_dataset(pickle_load, config, verbose=False, printMod=20):
     # For each set of files (input, output)
     assert type(pickle_load) == list, "pickle_load must be a list, not: " + str(type(pickle_load))
-    for fileList in pickle_load:
+    for i in range(len(pickle_load)):
+        if i % printMod == 0 and verbose:
+            print("Completed validation for file: " + str(i) + " of: " + len(pickle_load))
         # Open each file and confirm it matches the provided config
-        check_files(fileList, config)
+        check_files(pickle_load[i], config)
 
 def assert_same(expected, test):
     assert expected == test, "Expected: " + str(expected) + " but got: " + str(test)
@@ -84,9 +86,11 @@ def crop_data(data, crop):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Attempts to validate the given pickle file and config file")
     parser.add_argument("config")
+    parser.add_argument("--verbose", default=False, type=bool)
+    parser.add_argument("--printMod", default=20, type=int)
     args = parser.parse_args()
 
     from validate_config import *
     config = loadYaml(args.config)
     with open(config['data_train']['data_root'], 'rb') as f:
-        validate_dataset(pickle.load(f), config['data_train'])
+        validate_dataset(pickle.load(f), config['data_train'], verbose=args.verbose, printMod=args.printMod)
