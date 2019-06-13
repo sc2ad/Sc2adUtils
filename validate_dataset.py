@@ -37,10 +37,13 @@ def check_files(fileArray, config):
     out_data = crop_data(seg, config['crop'])
 
     #HEH!
-    in_sanity = np.concatenate(([config['batch_size']],config['im_dims'],[config['num_channels']]))
+    # TODO CONFIRM INPUT NUM CHANNELS, OUTPUT NUM CLASSES ARE LEGAL
+    # in_sanity = np.concatenate(([config['batch_size']],config['im_dims'],[config['num_channels']]))
+    in_sanity = config['im_dims']
     assert_same(in_sanity, in_data.shape)
 
-    out_sanity = np.concatenate(([config['batch_size']],config['im_dims'],[config['num_classes']]))
+    # out_sanity = np.concatenate(([config['batch_size']],config['im_dims'],[config['num_classes']]))
+    out_sanity = config['im_dims']
     assert_same(out_sanity, out_data.shape)
 
 def h5_check(file, config, dtype, crop=True):
