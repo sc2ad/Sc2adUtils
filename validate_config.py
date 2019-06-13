@@ -74,8 +74,8 @@ def load(data, schema, yamlLoader=yaml.UnsafeLoader):
     Schema must be JSON, it must be a dictionary, a path, or a string of JSON.
     """
     if isJson(data):
-        return loadAndValidateJson(data)
-    return loadAndValidateYaml(data, yamlLoader=yamlLoader)
+        return loadAndValidateJson(data, schema)
+    return loadAndValidateYaml(data, schema, yamlLoader=yamlLoader)
 
 def memoize(f):
     m = {}
