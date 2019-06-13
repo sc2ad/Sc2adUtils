@@ -13,7 +13,7 @@ def validate_dataset(pickle_load, config, verbose=False, printMod=20):
     assert type(pickle_load) == list, "pickle_load must be a list, not: " + str(type(pickle_load))
     for i in range(len(pickle_load)):
         if i % printMod == 0 and verbose:
-            print("Completed validation for file: " + str(i) + " of: " + len(pickle_load))
+            print("Completed validation for file: " + str(i) + " of: " + str(len(pickle_load)))
         # Open each file and confirm it matches the provided config
         check_files(pickle_load[i], config)
 
