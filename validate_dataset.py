@@ -6,19 +6,28 @@ import os
 import h5py
 import argparse
 
+ASSERTIONS = False
 # Validation Errors are AssertionErrors
 
 def validate_dataset(pickle_load, config, verbose=False, printMod=20):
     # For each set of files (input, output)
-    assert type(pickle_load) == list, "pickle_load must be a list, not: " + str(type(pickle_load))
+    assert_true(type(pickle_load) == list, "pickle_load must be a list, not: " + str(type(pickle_load)))
     for i in range(len(pickle_load)):
         if i % printMod == 0 and verbose:
             print("Completed validation for file: " + str(i) + " of: " + str(len(pickle_load)))
         # Open each file and confirm it matches the provided config
         check_files(pickle_load[i], config)
 
+def assert_true(truth, message=""):
+    # TODO Replace with custom assertions
+    if ASSERTIONS:
+        assert truth, message
+    else:
+        if not truth:
+            print("AssertionError: " + message)
+
 def assert_same(expected, test):
-    assert expected == test, "Expected: " + str(expected) + " but got: " + str(test)
+    assert_true(expected == test, "Expected: " + str(expected) + " but got: " + str(test))
 
 def check_files(fileArray, config):
     """
@@ -26,12 +35,15 @@ def check_files(fileArray, config):
     FileArray: a list of strings that is the file to open and check
     Config: a dictionary that contains im_dims, num_classes, num_channels, etc.
     """
-    assert type(fileArray) == list and len(fileArray) == 2, "Each item in the pickle must be a list of size 2, not: " + str(type(fileArray))
-    assert type(config['idx_classes']) == list and len(config['idx_classes']) == config['num_classes'], "idx_classes must be a list of same size as num_classes"
+    assert_true(type(fileArray) == list and len(fileArray) == 2, "Each item in the pickle must be a list of size 2, not: " + str(type(fileArray)))
+    assert_true(type(config['idx_classes']) == list, "idx_classes must be a list")
     input_file = fileArray[0]
     output_file = fileArray[1]
     in_data = h5_check(input_file, config, dtype=np.float32)
     out_data = h5_check(output_file, config, dtype=np.uint8, crop=False)
+    uniques = np.unique(out_data)
+    assert_true(len(uniques) == 2 and 0 in uniques and 1 in uniques, "The image must ONLY contain a binary mask! (0 and 1 ONLY). Instead, it contains the following types of values: " + str(uniques))
+    assert_true(len(config['idx_classes']) <= out_data.shape[len(out_data.shape) - 1], "idx_classes must be <= the channels of the image")
     seg = np.zeros((out_data.shape[0], out_data.shape[1], out_data.shape[2], len(config['idx_classes']))).astype('uint8')
 
     seg[:,:,:,:-1] = out_data[:,:,:,config['idx_classes'][:-1]]
@@ -53,19 +65,20 @@ def check_files(fileArray, config):
 def h5_check(file, config, dtype, crop=True):
     # Read the file as an h5py file
     with h5py.File(file, 'r') as f:
-        assert "data" in f.keys(), "The h5py file must contain the 'data' key!"
-        # TODO ADD DTYPE DETECTION
+        assert_true("data" in f.keys(), "The h5py file must contain the 'data' key!")
+        # Added DTYPE detection
+        assert_true(f['data'].dtype == dtype, "Type of h5py must be: " + str(dtype) + " but was: " + str(f['data'].dtype))
         data = np.array(f['data'], dtype=dtype)
-        assert 6 == len(config['crop']), "The length of the crop must be 6, not: " + str(len(config['crop']))
+        assert_true(6 == len(config['crop']), "The length of the crop must be 6, not: " + str(len(config['crop'])))
         for i in range(0, len(config['crop']), 2):
-            assert data.shape[i//2] > config['crop'][i] + config['crop'][i + 1], "Crop cannot be larger than the original image!"
+            assert_true(data.shape[i//2] > config['crop'][i] + config['crop'][i + 1], "Crop cannot be larger than the original image!")
         if crop:
             data = crop_data(data, config['crop'])
-        assert data.shape[0] == config['im_dims'][0], "image x-dimensions must match!"
-        assert data.shape[1] == config['im_dims'][1], "image y-dimensions must match!"
+        assert_true(data.shape[0] == config['im_dims'][0], "image x-dimensions must match!")
+        assert_true(data.shape[1] == config['im_dims'][1], "image y-dimensions must match!")
         if data.ndim == 3:
             # Will throw an index out of bounds if config['im_dims'] does not have index 2, but that's okay.
-            assert data.shape[2] == config['im_dims'][2], "image z-dimensions must match!"
+            assert_true(data.shape[2] == config['im_dims'][2], "image z-dimensions must match!")
     return data
 
 def crop_data(data, crop):
