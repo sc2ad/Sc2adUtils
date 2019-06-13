@@ -38,10 +38,10 @@ def check_files(fileArray, config):
 
     #HEH!
     in_sanity = np.concatenate(([config['batch_size']],config['im_dims'],[config['num_channels']]))
-    assert_same(in_sanity.shape, in_data.shape)
+    assert_same(in_sanity, in_data.shape)
 
     out_sanity = np.concatenate(([config['batch_size']],config['im_dims'],[config['num_classes']]))
-    assert_same(out_sanity.shape, out_data.shape)
+    assert_same(out_sanity, out_data.shape)
 
 def h5_check(file, config, dtype, crop=True):
     # Read the file as an h5py file
