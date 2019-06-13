@@ -45,7 +45,7 @@ def check_files(fileArray, config):
 
     # out_sanity = np.concatenate(([config['batch_size']],config['im_dims'],[config['num_classes']]))
     # Possibly only works because batch_size = 1?
-    out_sanity = np.concatenate((config['im_dims'], [config['num_classes']]))
+    out_sanity = tuple(np.concatenate((config['im_dims'], [config['num_classes']])).tolist())
     assert_same(out_sanity, out_data.shape)
 
 def h5_check(file, config, dtype, crop=True):
