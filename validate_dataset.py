@@ -4,6 +4,7 @@ import pickle
 import numpy as np
 import os
 import h5py
+import argparse
 
 # Validation Errors are AssertionErrors
 
@@ -73,3 +74,13 @@ def crop_data(data, crop):
     else:
         data = data[:,:,crop[4]:-crop[5],...]
     return data
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Attempts to validate the given pickle file and config file")
+    parser.add_argument("config")
+    args = parser.parse_args()
+
+    from validate_config import *
+    config = loadYaml(args.config)
+    with open(config['data_train']['data_root'], 'rb') as f:
+        validate_dataset(pickle.load(f), config['data_train'])
