@@ -30,10 +30,11 @@ def check_files(fileArray, config):
     output_file = fileArray[1]
     in_data = h5_check(input_file, config, dtype=np.float32)
     out_data = h5_check(output_file, config, dtype=np.uint8, crop=False)
-    if out_data.ndim == 3:
-        out_data = out_data[:, :, :, np.newaxis]
-    out_data = out_data[:, :, :, config['idx_classes']]
-    out_data = crop_data(out_data, config['crop'])
+    seg = np.zeros((out_data.shape[0], out_data.shape[1], out_data.shape[2], len(config['idx_classes']))).astype('uint8')
+
+    seg[:,:,:,:-1] = out_data[:,:,:,config['idx_classes'][:-1]]
+    seg[...,-1] = 1-np.max(seg,axis=3)
+    out_data = crop_data(seg, config['crop'])
 
     #HEH!
     in_sanity = np.concatenate(([config['batch_size']],config['im_dims'],[config['num_channels']]))
