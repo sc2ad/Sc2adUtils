@@ -12,19 +12,19 @@ def validate_dataset(pickle_load, config):
     # For each set of files (input, output)
     assert type(pickle_load) == list, "pickle_load must be a list, not: " + str(type(pickle_load))
     for fileList in pickle_load:
-        assert type(fileList) == list and len(fileList) == 2, "Each item in the pickle must be a list of size 2, not: " + str(type(fileList))
         # Open each file and confirm it matches the provided config
-        check_files(file, config)
+        check_files(fileList, config)
 
 def assert_same(expected, test):
     assert expected == test, "Expected: " + str(expected) + " but got: " + str(test)
 
 def check_files(fileArray, config):
     """
-    Opens the given file, confirms that everything inside it is the same as defined by the config.
-    File: a string that is the file to open and check
+    Opens the given fileArray, confirms that everything inside it is the same as defined by the config.
+    FileArray: a list of strings that is the file to open and check
     Config: a dictionary that contains im_dims, num_classes, num_channels, etc.
     """
+    assert type(fileArray) == list and len(fileArray) == 2, "Each item in the pickle must be a list of size 2, not: " + str(type(fileArray))
     assert type(config['idx_classes']) == list and len(config['idx_classes']) == config['num_classes'], "idx_classes must be a list of same size as num_classes"
     input_file = fileArray[0]
     output_file = fileArray[1]
