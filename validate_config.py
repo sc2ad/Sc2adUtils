@@ -32,7 +32,7 @@ def validateYaml(yaml, schema, yamlLoader=yaml.UnsafeLoader):
     assert YAML, "Must install PyYAML before attempting to load yaml files!"
     assert type(yaml) == dict or type(yaml) == str, "YAML must be a dictionary or path to a YAML file!"
     assert type(schema) == dict or type(schema) == str, "Schema must be a dictionary or string JSON or path to schema.json!"
-    validate(instance=fixTuples(loadYaml(yaml, yamlLoader)), schema=loadJson(schema))
+    validate(instance=fixTuples(loadYaml(yaml, yamlLoader=yamlLoader)), schema=loadJson(schema))
 
 def fixTuples(data):
     for key in data.keys():
@@ -65,7 +65,7 @@ def loadAndValidateYaml(yaml, schema, yamlLoader=yaml.UnsafeLoader):
     And returns the YAML if valid. Otherwise, it will throw a "jsonschema.exceptions.ValidationError".
     """
     validateYaml(yaml, schema)
-    return loadYaml(yaml, yamlLoader)
+    return loadYaml(yaml, yamlLoader=yamlLoader)
 
 def load(data, schema, yamlLoader=yaml.UnsafeLoader):
     """
@@ -75,20 +75,20 @@ def load(data, schema, yamlLoader=yaml.UnsafeLoader):
     """
     if isJson(data):
         return loadAndValidateJson(data)
-    return loadAndValidateYaml(data, yamlLoader)
+    return loadAndValidateYaml(data, yamlLoader=yamlLoader)
 
 def memoize(f):
     m = {}
-    def helper(input):
+    def helper(input, yamlLoader=yaml.UnsafeLoader):
         if not MEMOIZE:
             return f(input)
         if input not in m:
-            m[input] = f(input)
+            m[input] = f(input, loader=yamlLoader)
         return m[input]
     return helper
 
 @memoize
-def loadJson(data):
+def loadJson(data, loader=None):
     if type(data) == dict:
         return data
     try:
@@ -99,11 +99,11 @@ def loadJson(data):
             return json.load(f)
 
 @memoize
-def loadYaml(data, yamlLoader=yaml.UnsafeLoader):
+def loadYaml(data, loader=yaml.UnsafeLoader):
     if type(data) == dict:
         return data
     with open(data, 'r') as stream:
-        return yaml.load(stream, Loader=yamlLoader)
+        return yaml.load(stream, Loader=loader)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Reads the given config json file and confirms the config schema")
