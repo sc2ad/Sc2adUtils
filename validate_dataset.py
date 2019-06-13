@@ -48,7 +48,7 @@ def h5_check(file, config, dtype, crop=True):
         assert "data" in f.keys(), "The h5py file must contain the 'data' key!"
         # TODO ADD DTYPE DETECTION
         data = np.array(f['data'], dtype=dtype)
-        assert data.ndim * 2 == len(config['crop']), "The length of the crop must be twice the size of the length of the shape of the image, not: " + str(len(config['crop']))
+        assert 6 == len(config['crop']), "The length of the crop must be 6, not: " + str(len(config['crop']))
         for i in range(0, len(config['crop']), 2):
             assert data.shape[i//2] > config['crop'][i] + config['crop'][i + 1], "Crop cannot be larger than the original image!"
         if crop:
