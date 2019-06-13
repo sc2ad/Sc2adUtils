@@ -23,7 +23,7 @@ def validateJson(js, schema):
     assert type(schema) == dict or type(schema) == str, "Schema must be a dictionary or string JSON or path!"
     validate(instance=loadJson(js), schema=loadJson(schema))
 
-def validateYaml(yaml, schema):
+def validateYaml(yaml, schema, yamlLoader=yaml.UnsafeLoader):
     """
     Confirms that a given yaml follows the given schema.
     The schema can be a json string/dict.
@@ -32,7 +32,7 @@ def validateYaml(yaml, schema):
     assert YAML, "Must install PyYAML before attempting to load yaml files!"
     assert type(yaml) == dict or type(yaml) == str, "YAML must be a dictionary or path to a YAML file!"
     assert type(schema) == dict or type(schema) == str, "Schema must be a dictionary or string JSON or path to schema.json!"
-    validate(instance=fixTuples(loadYaml(yaml)), schema=loadJson(schema))
+    validate(instance=fixTuples(loadYaml(yaml, yamlLoader)), schema=loadJson(schema))
 
 def fixTuples(data):
     for key in data.keys():
@@ -59,15 +59,15 @@ def loadAndValidateJson(js, schema):
     validateJson(js, schema)
     return loadJson(js)
 
-def loadAndValidateYaml(yaml, schema):
+def loadAndValidateYaml(yaml, schema, yamlLoader=yaml.UnsafeLoader):
     """
     Loads the YAML config from the given yaml and schema strings, dicts, or paths
     And returns the YAML if valid. Otherwise, it will throw a "jsonschema.exceptions.ValidationError".
     """
     validateYaml(yaml, schema)
-    return loadYaml(yaml)
+    return loadYaml(yaml, yamlLoader)
 
-def load(data, schema):
+def load(data, schema, yamlLoader=yaml.UnsafeLoader):
     """
     Loads the given data and validates it according to the schema provided.
     Data must be either JSON or YAML, it must be a dictionary, a path, or a string of JSON.
@@ -75,7 +75,7 @@ def load(data, schema):
     """
     if isJson(data):
         return loadAndValidateJson(data)
-    return loadAndValidateYaml(data)
+    return loadAndValidateYaml(data, yamlLoader)
 
 def memoize(f):
     m = {}
@@ -99,11 +99,11 @@ def loadJson(data):
             return json.load(f)
 
 @memoize
-def loadYaml(data):
+def loadYaml(data, yamlLoader=yaml.UnsafeLoader):
     if type(data) == dict:
         return data
     with open(data, 'r') as stream:
-        return yaml.load(stream, Loader=yaml.FullLoader)
+        return yaml.load(stream, Loader=yamlLoader)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Reads the given config json file and confirms the config schema")
