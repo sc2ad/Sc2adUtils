@@ -9,18 +9,23 @@ import argparse
 ASSERTIONS = False
 # Validation Errors are AssertionErrors
 
-def validate_dataset(pickle_load, config, verbose=False, printMod=20):
+def validate_dataset(files, config, verbose=False, printMod=20, fast=False):
     # For each set of files (input, output)
-    assert_true(type(pickle_load) == list, "pickle_load must be a list, not: " + str(type(pickle_load)))
-    m = np.Infinity
-    M = -np.Infinity
-    for i in range(len(pickle_load)):
+    assert_true(type(files) == list, "files must be a list, not: " + str(type(files)))
+    if not fast:
+        m = np.Infinity
+        M = -np.Infinity
+    for i in range(len(files)):
         # Open each file and confirm it matches the provided config
-        new_min, new_max = check_files(pickle_load[i], config)
-        m = min(new_min, m)
-        M = max(new_max, M)
+        new_min, new_max = check_files(files[i], config, fast=fast)
+        if not fast:
+            m = min(new_min, m)
+            M = max(new_max, M)
         if i % printMod == 0 and verbose:
-            print("Completed validation for file: " + str(i) + " of: " + str(len(pickle_load)) + " overall min: " + str(m) + " overall max: " + str(M))
+            print("Completed validation for file: " + str(i) + " of: " + str(len(files)) \
+            + (" overall min: " + str(m) + " overall max: " + str(M)) if not fast else "")
+    if verbose:
+        print("Completed validating dataset!")
 
 def assert_true(truth, message=""):
     # TODO Replace with custom assertions
@@ -33,7 +38,7 @@ def assert_true(truth, message=""):
 def assert_same(expected, test):
     assert_true(expected == test, "Expected: " + str(expected) + " but got: " + str(test))
 
-def check_files(fileArray, config):
+def check_files(fileArray, config, fast=False):
     """
     Opens the given fileArray, confirms that everything inside it is the same as defined by the config.
     FileArray: a list of strings that is the file to open and check
@@ -43,10 +48,15 @@ def check_files(fileArray, config):
     assert_true(type(config['idx_classes']) == list, "idx_classes must be a list")
     input_file = fileArray[0]
     output_file = fileArray[1]
-    in_data = h5_check(input_file, config, dtype=np.float32)
-    out_data = h5_check(output_file, config, dtype=np.uint8, crop=False)
-    uniques = np.unique(out_data)
-    assert_true(len(uniques) == 2 and 0 in uniques and 1 in uniques, "The image must ONLY contain a binary mask! (0 and 1 ONLY). Instead, it contains the following types of values: " + str(uniques))
+    if not fast:
+        in_data = h5_check(input_file, config, dtype=np.float32)
+        out_data = h5_check(output_file, config, dtype=np.uint8, crop=False)
+        uniques = np.unique(out_data)
+        assert_true(len(uniques) == 2 and 0 in uniques and 1 in uniques, "The image must ONLY contain a binary mask! (0 and 1 ONLY). Instead, it contains the following types of values: " + str(uniques))
+    else:
+        in_data = fast_check(input_file, config, dtype=np.float32)
+        out_data = fast_check(output_file, config, dtype=np.uint8, crop=False)
+    
     assert_true(len(config['idx_classes']) <= out_data.shape[len(out_data.shape) - 1] + 1, "idx_classes must be <= the channels of the image: " + str(len(config['idx_classes'])) + "<=" + str(out_data.shape[len(out_data.shape) - 1] + 1))
     seg = np.zeros((out_data.shape[0], out_data.shape[1], out_data.shape[2], len(config['idx_classes']))).astype('uint8')
 
@@ -65,7 +75,15 @@ def check_files(fileArray, config):
     # Possibly only works because batch_size = 1?
     out_sanity = tuple(np.concatenate((config['im_dims'], [config['num_classes']])).tolist())
     assert_same(out_sanity, out_data.shape)
-    return np.min(in_data), np.max(in_data)
+    if not fast:
+        return np.min(in_data), np.max(in_data)
+    return -np.Infinity, np.Infinity
+
+def fast_check(file, config, dtype, crop=True):
+    # Read just the header of the h5py file.
+    # TODO IMPLEMENT
+    pass
+
 
 def h5_check(file, config, dtype, crop=True):
     # Read the file as an h5py file
@@ -104,13 +122,14 @@ def crop_data(data, crop):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Attempts to validate the given pickle file and config file")
     parser.add_argument("config")
-    parser.add_argument("--verbose", default=False, type=bool)
+    parser.add_argument("--verbose", default=False)
     parser.add_argument("--printMod", default=20, type=int)
+    parser.add_argument("--fast", default=False, help="Only does validation checks on headers, in theory it is very fast.")
     args = parser.parse_args()
 
     from validate_config import *
     config = loadYaml(args.config)
     with open(config['data_train']['data_root'], 'rb') as f:
-        validate_dataset(pickle.load(f), config['data_train'], verbose=args.verbose, printMod=args.printMod)
+        validate_dataset(pickle.load(f), config['data_train'], verbose=args.verbose, printMod=args.printMod, fast=args.fast)
     with open(config['data_val']['data_root'], 'rb') as f:
-        validate_dataset(pickle.load(f), config['data_val'], verbose=args.verbose, printMod=args.printMod)
+        validate_dataset(pickle.load(f), config['data_val'], verbose=args.verbose, printMod=args.printMod, fast=args.fast)
