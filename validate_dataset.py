@@ -112,3 +112,5 @@ if __name__ == "__main__":
     config = loadYaml(args.config)
     with open(config['data_train']['data_root'], 'rb') as f:
         validate_dataset(pickle.load(f), config['data_train'], verbose=args.verbose, printMod=args.printMod)
+    with open(config['data_val']['data_root'], 'rb') as f:
+        validate_dataset(pickle.load(f), config['data_val'], verbose=args.verbose, printMod=args.printMod)
