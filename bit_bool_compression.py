@@ -58,20 +58,34 @@ def writeBools(writer, bools):
 
 def from_numpy(numpy_arr):
     if type(numpy_arr) == np.uint8:
-        return parseByte(numpy_arr)
+        return [np.uint8(item) for item in parseByte(numpy_arr)]
     assert numpy_arr.dtype == np.uint8, "Numpy array must be a uint8 array!"
-    l = [from_numpy(item) for item in numpy_arr]
-    new = np.array(l)
+    if numpy_arr.ndim == 1:
+        # Because there is more than one dimension to this array, we must travel "down" to the lowest dimension
+        # before we can check the header length of the array
+
+        assert len(numpy_arr) > 4, "Numpy array cannot be empty! (must contain 4 byte header)"
+        # First 4 bytes are used for proper size of the array
+        length = struct.unpack("I", bytes(numpy_arr[:4]))[0]
+        l = [from_numpy(item) for item in numpy_arr[4:]]
+        # Take the very last item of the array and shorten it to the proper length.
+        l[(length - 1)//8] = l[(length - 1)//8][:length % 8 if length % 8 != 0 else 8]
+        l = sum(l, [])
+        new = np.array(l).reshape((length,))
+    else:
+        l = [from_numpy(item) for item in numpy_arr]
+        new = np.array(l)
     return new
 
 def to_numpy(bools):
-    if (type(bools) == list or type(bools) == np.ndarray) and (type(bools[0]) == bool or type(bools[0]) == np.bool_):
+    if (type(bools) == list or type(bools) == np.ndarray) and (type(bools[0]) == bool or type(bools[0]) == np.bool_ or type(bools[0]) == np.uint8):
         o = [1 if item else 0 for item in bools]
         while len(o) % 8 != 0:
             o.append(0)
-        return np.array(list(getbytes(o)), dtype=np.uint8)
+        length_bytes = struct.pack("I", len(bools))
+        return np.array([b for b in length_bytes] + list(getbytes(o)), dtype=np.uint8)
     assert type(bools) == list or type(bools) == np.ndarray, "Bools must be a list of bools, not: " + str(type(bools))
-    new = np.array([to_numpy(b)[0] for b in bools], dtype=np.uint8)
+    new = np.array([list(to_numpy(b)) for b in bools], dtype=np.uint8)
     return new
 
 def roundTripTest(file, boolMax):
@@ -93,12 +107,8 @@ def roundTripTest(file, boolMax):
     assert dims[0] == boolCount, "Dimensions should match!"
     assert b[:len(bs)] == bs, "Bool arrays should match but don't!"
 
-def roundTripTestNumpy(npFile, boolMax):
-    boolCount = random.randint(1, boolMax)
-    bs = []
-    for i in range(boolCount):
-        bs.append(random.randint(0, 1) == 1)
-    np1 = to_numpy(bs)
+def roundTripTestNumpy(npFile, bools):
+    np1 = to_numpy(bools)
     with open(npFile, 'wb') as f:
         pickle.dump(np1, f)
     bs1 = from_numpy(np1)
@@ -111,16 +121,28 @@ def roundTripTestNumpy(npFile, boolMax):
     assert temp.all() == np2.all(), "'From' conversion should not fail!"
     assert np1.all() == np2.all(), "Numpy arrays should match but don't!"
 
+def roundTripTestNumpyMulti(npFile, boolMax, dimCount=1):
+    bools = []
+    for j in range(dimCount):
+        boolCount = random.randint(1, boolMax)
+        bs = []
+        for i in range(boolCount):
+            bs.append(random.randint(0, 1) == 1)
+        bools.append(bs)
+    print(bools)
+    roundTripTestNumpy(npFile, bools)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Writes/Reads bools in an 8 bit compressed state from the provided files.")
     parser.add_argument("file")
     parser.add_argument("--read", default=False)
     parser.add_argument("--boolMax", default=20, type=int)
+    parser.add_argument("--dims", default=2, type=int)
 
     args = parser.parse_args()
 
     roundTripTest(args.file, args.boolMax)
-    roundTripTestNumpy(args.file + ".pkl", args.boolMax)
+    roundTripTestNumpyMulti(args.file + ".pkl", args.boolMax, dimCount=args.dims)
 
     if args.read:
         b = []
