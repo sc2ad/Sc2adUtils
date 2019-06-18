@@ -186,7 +186,6 @@
                 },
                 "weights": {
                     "description": "The weights to use for each class metric",
-                    "minItems": 1,
                     "type": "array",
                     "items": {
                         "type": "number"
