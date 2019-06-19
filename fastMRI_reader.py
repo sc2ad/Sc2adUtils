@@ -1,22 +1,24 @@
 import h5py
 import numpy as np
 
-def readParam(dat, param):
+def readParam_unsafe(dat, param):
     if type(dat) == str:
-        dat = read_h5(dat)
+        dat = read_h5_unsafe(dat)
     if type(dat) == dict:
         return dat[param]
     raise NotImplementedError("Can only support strings or dicts, not: " + str(type(dat)))
 
 def readMask(dat):
-    return readParam(dat, "mask")
+    return readParam_unsafe(dat, "mask")
 
 def readKSpace(dat):
-    return readParam(dat, "kspace")
+    return readParam_unsafe(dat, "kspace")
 
-def read_h5(fName):
-    with h5py.File(fName, 'r') as hf:
-        return {k: hf[k] for k in iter(hf)}
+def read_h5_unsafe(fName):
+
+    hf = h5py.File(fName, 'r')
+    d = {k: hf[k] for k in iter(hf)}
+    d['_file'] = hf
 
 def convert_to_image(kspace):
     assert type(kspace) == np.object
