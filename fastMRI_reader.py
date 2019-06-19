@@ -1,5 +1,6 @@
 import h5py
 import numpy as np
+import matplotlib.pyplot as plt
 
 def readParam_unsafe(dat, param):
     if type(dat) == str:
@@ -15,13 +16,16 @@ def readKSpace(dat):
     return readParam_unsafe(dat, "kspace")
 
 def read_h5_unsafe(fName):
-
     hf = h5py.File(fName, 'r')
     d = {k: hf[k] for k in iter(hf)}
     d['_file'] = hf
+    return d
 
 def convert_to_image(kspace):
-    assert type(kspace) == np.object
-    assert kspace.dtype == np.float32
+    # I don't know how to properly convert the data so that it looks correct
+    # This currently just seems wrong, maybe because I am doing rfft?
+    return np.array(np.fft.rfftn(np.array(kspace)), dtype=np.float32)
 
-    return np.fft.rfft2(kspace)
+def show(image):
+    plt.imshow(image)
+    plt.show()
