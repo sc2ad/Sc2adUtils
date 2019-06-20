@@ -21,10 +21,18 @@ def read_h5_unsafe(fName):
     d['_file'] = hf
     return d
 
+# fast Fourier transform
+def fft2c(f):
+    return np.fft.ifftshift(np.fft.fft2(np.fft.fftshift(f)))
+
+# inverse fast Fourier transform
+def ifft2c(F):
+    return np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(F)))
+
 def convert_to_image(kspace):
     # I don't know how to properly convert the data so that it looks correct
     # This currently just seems wrong, maybe because I am doing rfft?
-    return np.array(np.fft.rfftn(np.array(kspace)), dtype=np.float32)
+    return np.array(fft2c(kspace), dtype=np.float32)
 
 def show(image):
     plt.imshow(image)
