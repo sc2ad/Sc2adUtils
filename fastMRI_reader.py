@@ -21,11 +21,30 @@ def read_h5_unsafe(fName):
     d['_file'] = hf
     return d
 
-# fast Fourier transform
+def center_crop(image, new_width=None, new_height=None):
+    width = image.shape[1]
+    height = image.shape[0]
+
+    if new_width is None:
+        new_width = min(width, height)
+    if new_height is None:
+        new_height = min(width, height)
+    
+    left = int(np.ceil((width - new_width) / 2))
+    right = width - int(np.floor((width - new_width) / 2))
+    top = int(np.ceil((height - new_height) / 2))
+    bottom = height - int(np.floor((height - new_height) / 2))
+
+    if len(image.shape) == 2:
+        center_cropped_image = image[top:bottom, left:right]
+    else:
+        center_cropped_image = image[top:bottom, left:right, ...]
+    
+    return center_cropped_image
+
 def fft2c(f):
     return np.fft.ifftshift(np.fft.fft2(np.fft.fftshift(f)))
 
-# inverse fast Fourier transform
 def ifft2c(F):
     return np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(F)))
 
