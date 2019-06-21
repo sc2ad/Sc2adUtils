@@ -85,13 +85,13 @@ def writeKSpacesToDir(src, dist):
                 pkl.dump(kspace, fw)
             d['_file'].close()
 
-def writeTrainingRoot(src, dest="dataTrainingRoot.pkl", training_percentage=0.8):
+def writeTrainingRoot(src, dest_pkl="dataTrainingRoot.pkl", training_percentage=0.8):
     olst = os.listdir(src)
     # only the last few are saved for validation, not exactly optimal
     lst = olst[:int(training_percentage * len(olst))]
     out = []
     for f in lst:
-        if f.endswith(".h5"):
+        if f.endswith(".h5") or f.endswith(".im"):
             label = os.path.abspath(os.path.join(src, f))
             # Input is a new file that needs to be generated
             # Needs to be in the image space, convert to kspace, undersample,
@@ -99,15 +99,15 @@ def writeTrainingRoot(src, dest="dataTrainingRoot.pkl", training_percentage=0.8)
             d = read_h5_unsafe(label)
             kspace = readKSpace(d)
             image = convert_to_image(kspace)
-            new_img = rc.image_undersampled_recon(image, trajectory=rc.reduction_disk_trajectory, recon_type='zero-fill')
-            path = os.path.abspath(os.path.join(src, f.replace(".h5", "_undersampled.h5")))
+            new_img = cr.image_undersampled_recon(image, trajectory=cr.reduction_disk_trajectory, recon_type='zero-fill')
+            path = os.path.abspath(os.path.join(src, f.replace(".im", "_undersampled.im").replace(".h5", "_undersampled.im")))
             with open(path, 'wb') as fw:
                 pkl.dump(new_img, fw)
             inp = path
             out.append([inp, label])
             print("Completed file: " + label)
 
-    with open(dest, 'wb') as fw:
+    with open(dest_pkl, 'wb') as fw:
         pkl.dump(out, fw)
     print("Complete!")
     # Returns the files that were NOT written to the data root
