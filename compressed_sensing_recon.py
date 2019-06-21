@@ -49,7 +49,8 @@ def reduction_disk_trajectory(kspace_shape, accel_factor, k=5.0, step=1, *args):
     # Generate circles of increasing radii starting at the center.
     minradii = 3
     # maxradii = int(kspace_shape[0] / 2 - k)
-    maxradii = int(math.sqrt(center[0] * center[0] + center[1] * center[1]))
+    maxradii = int(kspace_shape[0] * 2/3)
+    # maxradii = int(math.sqrt(center[0] * center[0] + center[1] * center[1]))
     radii = range(minradii, maxradii, step)
     # accel_factor decrease should increase the quantity of circles
     mask[center[0], center[1]] = True
