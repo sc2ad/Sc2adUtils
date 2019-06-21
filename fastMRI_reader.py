@@ -106,7 +106,7 @@ def writeTrainingRoot(src, dst, dest_pkl="dataTrainingRoot.pkl", training_percen
         new_img = cr.image_undersampled_recon(image, accel_factor=12, trajectory=cr.reduction_disk_trajectory, recon_type='zero-fill')
         path = os.path.abspath(os.path.join(dst, f.replace(".im", "_undersampled.im").replace(".h5", "_undersampled.im")))
         with h5py.File(path, 'w') as fw:
-            fw.write({"data": new_img})
+            fw.create_dataset("data", new_img, dtpye='f4')
         d['_file'].close()
         inp = path
         out.append([inp, label])
