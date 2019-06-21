@@ -119,7 +119,7 @@ def writeTrainingRoot(src, dst, dest_pkl="dataTrainingRoot.pkl", training_percen
                 image[:, :, i] = sigpy.ifft(kspace * mask, center=True, norm='ortho')
         path = os.path.abspath(os.path.join(dst, f.replace(".im", "_undersampled.im").replace(".h5", "_undersampled.im")))
         with h5py.File(path, 'w') as fw:
-            fw.create_dataset("data", image.shape, dtype='f4')
+            # fw.create_dataset("data", image.shape, dtype='f4')
             fw['data'] = image
         d['_file'].close()
         inp = path
