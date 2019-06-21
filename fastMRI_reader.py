@@ -103,10 +103,13 @@ def writeTrainingRoot(src, dst, dest_pkl="dataTrainingRoot.pkl", training_percen
         # kspace = readKSpace(d)
         # image = convert_to_image(kspace)
         image = np.array(readImage(d))
-        new_img = cr.image_undersampled_recon(image, accel_factor=12, trajectory=cr.reduction_disk_trajectory, recon_type='zero-fill')
+        new_img = []
+        for i in range(len(image.shape[0])):
+            new_img.append(cr.image_undersampled_recon(image[i], accel_factor=12, recon_type='zero-fill'))
+        new_img = np.array(new_img)
         path = os.path.abspath(os.path.join(dst, f.replace(".im", "_undersampled.im").replace(".h5", "_undersampled.im")))
         with h5py.File(path, 'w') as fw:
-            fw.create_dataset("data", new_img, dtpye='f4')
+            fw.create_dataset("data", new_img, dtype='f4')
         d['_file'].close()
         inp = path
         out.append([inp, label])
