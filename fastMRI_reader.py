@@ -94,6 +94,7 @@ def writeTrainingRoot(src, dest_pkl="dataTrainingRoot.pkl", training_percentage=
         if f.endswith(".h5") or f.endswith(".im"):
             start = time.time()
             label = os.path.abspath(os.path.join(src, f))
+            print("Starting file: " + label)
             # Input is a new file that needs to be generated
             # Needs to be in the image space, convert to kspace, undersample,
             # then convert from kspace to image space
@@ -101,10 +102,11 @@ def writeTrainingRoot(src, dest_pkl="dataTrainingRoot.pkl", training_percentage=
             # kspace = readKSpace(d)
             # image = convert_to_image(kspace)
             image = np.array(readImage(d))
-            new_img = cr.image_undersampled_recon(image, trajectory=cr.reduction_disk_trajectory, recon_type='zero-fill')
+            new_img = cr.image_undersampled_recon(image, accel_factor=12, trajectory=cr.reduction_disk_trajectory, recon_type='zero-fill')
             path = os.path.abspath(os.path.join(src, f.replace(".im", "_undersampled.im").replace(".h5", "_undersampled.im")))
             with open(path, 'wb') as fw:
                 pkl.dump(new_img, fw)
+            d['_file'].close()
             inp = path
             out.append([inp, label])
             delta = time.time() - start

@@ -32,7 +32,7 @@ def poisson_lines(kspace_shape, accel_factor):
     lines = np.zeros(kspace_shape, dtype=np.bool)
     return lines
 
-def reduction_disk_trajectory(kspace_shape, accel_factor, k=5.0, step=1, *args):
+def reduction_disk_trajectory(kspace_shape, accel_factor, k=5.0, step=5, *args):
     """
     This function returns the reduction disk (a name I randomly came up with) for a given kspace size and accel_factor.
 
