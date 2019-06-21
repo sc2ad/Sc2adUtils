@@ -16,10 +16,23 @@ def poisson_trajectory(kspace_shape, accel_factor, *args):
     """
     poisson_mask = sigpy.mri.poisson(kspace_shape, accel=accel_factor, crop_corner=True)
     # Ensures that center of k-space gets sampled
+    # Cu Py
     poisson_mask[np.int16(poisson_mask.shape[0] / 2), np.int16(poisson_mask.shape[1] / 2)] = True
     return np.bool8(poisson_mask)
 
-def reduction_disk_trajectory(kspace_shape, accel_factor, k=0.0, step=1, *args):
+def poisson_lines(kspace_shape, accel_factor):
+    """
+    This function returns the poisson line mask for a given kspace size and accel_factor.
+    NOT IMPLEMENTED YET!
+
+    Inputs:
+    :param kspace_shape: the size of the kspace to use in determining the size of the mask (tuple)
+    :param accel_factor: the acceleration factor (float)
+    """
+    lines = np.zeros(kspace_shape, dtype=np.bool)
+    return lines
+
+def reduction_disk_trajectory(kspace_shape, accel_factor, k=5.0, step=1, *args):
     """
     This function returns the reduction disk (a name I randomly came up with) for a given kspace size and accel_factor.
 
@@ -68,7 +81,7 @@ def image_undersampled_recon(image, accel_factor=1.5, eps=1e-6, recon_type='l1-w
     :param args: extraneous arguments to pass to the trajectory function call (extraneous arguments)
     :return: reconstructed_image: (numpy array complex128)
     """
-    # Convert image to k-space 
+    # Convert image to k-space
     kspace = sigpy.fft(image, center=True, norm='ortho')
 
     # Generate trajectory mask from kspace size and accel_factor, as well as extraneous arguments.

@@ -1,6 +1,9 @@
 import h5py
 import numpy as np
 import matplotlib.pyplot as plt
+import os
+import pickle as pkl
+import compressed_sensing_recon as cr
 
 def readParam_unsafe(dat, param):
     if type(dat) == str:
@@ -14,6 +17,10 @@ def readMask(dat):
 
 def readKSpace(dat):
     return readParam_unsafe(dat, "kspace")
+
+def readImage(dat):
+    print(dat)
+    return readParam_unsafe(dat, "image")
 
 def read_h5_unsafe(fName):
     hf = h5py.File(fName, 'r')
@@ -49,10 +56,59 @@ def ifft2c(F):
     return np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(F)))
 
 def convert_to_image(kspace):
-    # I don't know how to properly convert the data so that it looks correct
-    # This currently just seems wrong, maybe because I am doing rfft?
     return np.array(fft2c(kspace), dtype=np.float32)
+
+def convert_to_kspace(image):
+    return np.array(ifft2c(image), dtype=np.float32)
 
 def show(image):
     plt.imshow(image)
     plt.show()
+
+def writeImagesToDir(src, dist):
+    for f in os.listdir(src):
+        if f.endswith(".h5"):
+            d = read_h5_unsafe(f)
+            # Convert kspace to image
+            img = convert_to_image(readKSpace(d))
+            with open(os.path.join(dist, f) + ".pkl", 'wb') as fw:
+                pkl.dump(img, fw)
+            d['_file'].close()
+
+def writeKSpacesToDir(src, dist):
+    for f in os.listdir(src):
+        if f.endswith(".h5"):
+            d = read_h5_unsafe(f)
+            # Convert image to kspace
+            kspace = convert_to_kspace(readImage(d))
+            with open(os.path.join(dist, f) + ".pkl", 'wb') as fw:
+                pkl.dump(kspace, fw)
+            d['_file'].close()
+
+def writeTrainingRoot(src, dest="dataTrainingRoot.pkl", training_percentage=0.8):
+    olst = os.listdir(src)
+    # only the last few are saved for validation, not exactly optimal
+    lst = olst[:int(training_percentage * len(olst))]
+    out = []
+    for f in lst:
+        if f.endswith(".h5"):
+            label = os.path.abspath(os.path.join(src, f))
+            # Input is a new file that needs to be generated
+            # Needs to be in the image space, convert to kspace, undersample,
+            # then convert from kspace to image space
+            d = read_h5_unsafe(label)
+            kspace = readKSpace(d)
+            image = convert_to_image(kspace)
+            new_img = rc.image_undersampled_recon(image, trajectory=rc.reduction_disk_trajectory, recon_type='zero-fill')
+            path = os.path.abspath(os.path.join(src, f.replace(".h5", "_undersampled.h5")))
+            with open(path, 'wb') as fw:
+                pkl.dump(new_img, fw)
+            inp = path
+            out.append([inp, label])
+            print("Completed file: " + label)
+
+    with open(dest, 'wb') as fw:
+        pkl.dump(out, fw)
+    print("Complete!")
+    # Returns the files that were NOT written to the data root
+    return olst[int(training_percentage * len(olst)) + 1:]
