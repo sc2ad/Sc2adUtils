@@ -105,10 +105,10 @@ def writeTrainingRoot(src, dst, dest_pkl="dataTrainingRoot.pkl", training_percen
         image = np.array(readImage(d))
         rate = 10
         print("Shape: " + str(image.shape))
-        for i in range(image.shape[0]):
-            if i % rate:
+        for i in range(image.shape[2]):
+            if not i % rate:
                 print("Starting undersample for slice: " + str(i))
-            image[i] = cr.image_undersampled_recon(image[i], accel_factor=12, recon_type='zero-fill')
+            image[:, :, i] = cr.image_undersampled_recon(image[:, :, i], accel_factor=12, recon_type='zero-fill')
         path = os.path.abspath(os.path.join(dst, f.replace(".im", "_undersampled.im").replace(".h5", "_undersampled.im")))
         with h5py.File(path, 'w') as fw:
             fw.create_dataset("data", image, dtype='f4')
