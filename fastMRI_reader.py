@@ -20,7 +20,7 @@ def readKSpace(dat):
 
 def readImage(dat):
     print(dat)
-    return readParam_unsafe(dat, "image")
+    return readParam_unsafe(dat, "data")
 
 def read_h5_unsafe(fName):
     hf = h5py.File(fName, 'r')
