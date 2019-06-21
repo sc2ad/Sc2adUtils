@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import os
 import pickle as pkl
 import compressed_sensing_recon as cr
+import time
 
 def readParam_unsafe(dat, param):
     if type(dat) == str:
@@ -91,6 +92,7 @@ def writeTrainingRoot(src, dest_pkl="dataTrainingRoot.pkl", training_percentage=
     out = []
     for f in lst:
         if f.endswith(".h5") or f.endswith(".im"):
+            start = time.time()
             label = os.path.abspath(os.path.join(src, f))
             # Input is a new file that needs to be generated
             # Needs to be in the image space, convert to kspace, undersample,
@@ -105,7 +107,8 @@ def writeTrainingRoot(src, dest_pkl="dataTrainingRoot.pkl", training_percentage=
                 pkl.dump(new_img, fw)
             inp = path
             out.append([inp, label])
-            print("Completed file: " + label)
+            delta = time.time() - start
+            print("Completed file: " + label + " in: " + str(delta) + " seconds!")
 
     with open(dest_pkl, 'wb') as fw:
         pkl.dump(out, fw)
