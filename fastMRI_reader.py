@@ -86,7 +86,7 @@ def writeKSpacesToDir(src, dist):
                 pkl.dump(kspace, fw)
             d['_file'].close()
 
-def writeTrainingRoot(src, dst, dest_pkl="dataTrainingRoot.pkl", training_percentage=0.8, unique_mask_per_slice=False):
+def writeTrainingRoot(src, dst, dest_pkl="dataTrainingRoot.pkl", training_percentage=0.8, unique_mask_per_slice=False, skip_existing=True):
     olst = os.listdir(src)
     # Get only valid training data
     olst = [item for item in olst if item.endswith(".h5") or item.endswith(".im")]
@@ -97,6 +97,9 @@ def writeTrainingRoot(src, dst, dest_pkl="dataTrainingRoot.pkl", training_percen
         start = time.time()
         label = os.path.abspath(os.path.join(src, f))
         print("Starting file: " + label)
+        path = os.path.abspath(os.path.join(dst, f.replace(".im", "_undersampled.im").replace(".h5", "_undersampled.im")))
+        if os.path.exists(path) and skip_existing:
+            print("Skipping file because it already exists!")
         # Input is a new file that needs to be generated
         # Needs to be in the image space, convert to kspace, undersample,
         # then convert from kspace to image space
@@ -117,7 +120,6 @@ def writeTrainingRoot(src, dst, dest_pkl="dataTrainingRoot.pkl", training_percen
             else:
                 kspace = sigpy.fft(image[:, :, i], center=True, norm='ortho')
                 image[:, :, i] = sigpy.ifft(kspace * mask, center=True, norm='ortho')
-        path = os.path.abspath(os.path.join(dst, f.replace(".im", "_undersampled.im").replace(".h5", "_undersampled.im")))
         with h5py.File(path, 'w') as fw:
             # fw.create_dataset("data", image.shape, dtype='f4')
             fw['data'] = image
