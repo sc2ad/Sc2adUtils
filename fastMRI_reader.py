@@ -85,32 +85,33 @@ def writeKSpacesToDir(src, dist):
                 pkl.dump(kspace, fw)
             d['_file'].close()
 
-def writeTrainingRoot(src, dest_pkl="dataTrainingRoot.pkl", training_percentage=0.8):
+def writeTrainingRoot(src, dst, dest_pkl="dataTrainingRoot.pkl", training_percentage=0.8):
     olst = os.listdir(src)
+    # Get only valid training data
+    olst = [item for item in olst if item.endswith(".h5") or item.endswith(".im")]
     # only the last few are saved for validation, not exactly optimal
     lst = olst[:int(training_percentage * len(olst))]
     out = []
     for f in lst:
-        if f.endswith(".h5") or f.endswith(".im"):
-            start = time.time()
-            label = os.path.abspath(os.path.join(src, f))
-            print("Starting file: " + label)
-            # Input is a new file that needs to be generated
-            # Needs to be in the image space, convert to kspace, undersample,
-            # then convert from kspace to image space
-            d = read_h5_unsafe(label)
-            # kspace = readKSpace(d)
-            # image = convert_to_image(kspace)
-            image = np.array(readImage(d))
-            new_img = cr.image_undersampled_recon(image, accel_factor=12, trajectory=cr.reduction_disk_trajectory, recon_type='zero-fill')
-            path = os.path.abspath(os.path.join(src, f.replace(".im", "_undersampled.im").replace(".h5", "_undersampled.im")))
-            with open(path, 'wb') as fw:
-                pkl.dump(new_img, fw)
-            d['_file'].close()
-            inp = path
-            out.append([inp, label])
-            delta = time.time() - start
-            print("Completed file: " + label + " in: " + str(delta) + " seconds!")
+        start = time.time()
+        label = os.path.abspath(os.path.join(src, f))
+        print("Starting file: " + label)
+        # Input is a new file that needs to be generated
+        # Needs to be in the image space, convert to kspace, undersample,
+        # then convert from kspace to image space
+        d = read_h5_unsafe(label)
+        # kspace = readKSpace(d)
+        # image = convert_to_image(kspace)
+        image = np.array(readImage(d))
+        new_img = cr.image_undersampled_recon(image, accel_factor=12, trajectory=cr.reduction_disk_trajectory, recon_type='zero-fill')
+        path = os.path.abspath(os.path.join(dst, f.replace(".im", "_undersampled.im").replace(".h5", "_undersampled.im")))
+        with h5py.File(path, 'w') as fw:
+            fw.write({"data": new_img})
+        d['_file'].close()
+        inp = path
+        out.append([inp, label])
+        delta = time.time() - start
+        print("Completed file: " + label + " in: " + str(delta) + " seconds!")
 
     with open(dest_pkl, 'wb') as fw:
         pkl.dump(out, fw)
