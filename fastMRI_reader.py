@@ -5,6 +5,7 @@ import os
 import pickle as pkl
 import compressed_sensing_recon as cr
 import time
+import sigpy
 
 def readParam_unsafe(dat, param):
     if type(dat) == str:
@@ -85,7 +86,7 @@ def writeKSpacesToDir(src, dist):
                 pkl.dump(kspace, fw)
             d['_file'].close()
 
-def writeTrainingRoot(src, dst, dest_pkl="dataTrainingRoot.pkl", training_percentage=0.8):
+def writeTrainingRoot(src, dst, dest_pkl="dataTrainingRoot.pkl", training_percentage=0.8, unique_mask_per_slice=False):
     olst = os.listdir(src)
     # Get only valid training data
     olst = [item for item in olst if item.endswith(".h5") or item.endswith(".im")]
@@ -105,10 +106,17 @@ def writeTrainingRoot(src, dst, dest_pkl="dataTrainingRoot.pkl", training_percen
         image = np.array(readImage(d))
         rate = 10
         print("Shape: " + str(image.shape))
+        accelF = 12
+        if not unique_mask_per_slice:
+            mask = cr.poisson_trajectory(image[:, :, 0].shape, accelF)
         for i in range(image.shape[2]):
             if not i % rate:
                 print("Starting undersample for slice: " + str(i))
-            image[:, :, i] = cr.image_undersampled_recon(image[:, :, i], accel_factor=12, recon_type='zero-fill')
+            if unique_mask_per_slice:
+                image[:, :, i] = cr.image_undersampled_recon(image[:, :, i], accel_factor=accelF, recon_type='zero-fill')
+            else:
+                kspace = sigpy.fft(image[:, :, i], center=True, norm='ortho')
+                image[:, :, i] = sigpy.ifft(kspace * mask, center=True, norm='ortho')
         path = os.path.abspath(os.path.join(dst, f.replace(".im", "_undersampled.im").replace(".h5", "_undersampled.im")))
         with h5py.File(path, 'w') as fw:
             fw.create_dataset("data", image, dtype='f4')
