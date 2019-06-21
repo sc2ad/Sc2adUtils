@@ -99,7 +99,7 @@ def writeTrainingRoot(src, dest_pkl="dataTrainingRoot.pkl", training_percentage=
             d = read_h5_unsafe(label)
             # kspace = readKSpace(d)
             # image = convert_to_image(kspace)
-            image = readImage(d)
+            image = np.array(readImage(d))
             new_img = cr.image_undersampled_recon(image, trajectory=cr.reduction_disk_trajectory, recon_type='zero-fill')
             path = os.path.abspath(os.path.join(src, f.replace(".im", "_undersampled.im").replace(".h5", "_undersampled.im")))
             with open(path, 'wb') as fw:
