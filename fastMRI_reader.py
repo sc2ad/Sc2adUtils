@@ -86,13 +86,15 @@ def writeKSpacesToDir(src, dist):
                 pkl.dump(kspace, fw)
             d['_file'].close()
 
-def writeTrainingRoot(src, dst, dest_pkl="dataTrainingRoot.pkl", training_percentage=0.8, unique_mask_per_slice=False, skip_existing=True):
-    olst = os.listdir(src)
-    # Get only valid training data
-    olst = [item for item in olst if item.endswith(".h5") or item.endswith(".im")]
-    # only the last few are saved for validation, not exactly optimal
-    lst = olst[:int(training_percentage * len(olst))]
+SKIPPED = "SKIPPED"
+SUCCESS = "CREATED AND COPIED"
+FAILED = "FAILED DUE TO EXCEPTION"
+
+def createRoot(src, dst, lst, dst_pkl, unique_mask_per_slice=False, skip_existing=True):
+    rate = 10
+    accelF = 12
     out = []
+    outp_result = {}
     for f in lst:
         start = time.time()
         label = os.path.abspath(os.path.join(src, f))
@@ -100,37 +102,52 @@ def writeTrainingRoot(src, dst, dest_pkl="dataTrainingRoot.pkl", training_percen
         path = os.path.abspath(os.path.join(dst, f.replace(".im", "_undersampled.im").replace(".h5", "_undersampled.im")))
         if os.path.exists(path) and skip_existing:
             print("Skipping file because it already exists!")
-        # Input is a new file that needs to be generated
-        # Needs to be in the image space, convert to kspace, undersample,
-        # then convert from kspace to image space
-        d = read_h5_unsafe(label)
-        # kspace = readKSpace(d)
-        # image = convert_to_image(kspace)
-        image = np.array(readImage(d))
-        rate = 10
-        print("Shape: " + str(image.shape))
-        accelF = 12
-        if not unique_mask_per_slice:
-            mask = cr.poisson_trajectory(image[:, :, 0].shape, accelF)
-        for i in range(image.shape[2]):
-            if not i % rate:
-                print("Starting undersample for slice: " + str(i))
-            if unique_mask_per_slice:
-                image[:, :, i] = cr.image_undersampled_recon(image[:, :, i], accel_factor=accelF, recon_type='zero-fill')
-            else:
-                kspace = sigpy.fft(image[:, :, i], center=True, norm='ortho')
-                image[:, :, i] = sigpy.ifft(kspace * mask, center=True, norm='ortho')
-        with h5py.File(path, 'w') as fw:
-            # fw.create_dataset("data", image.shape, dtype='f4')
-            fw['data'] = image
-        d['_file'].close()
-        inp = path
-        out.append([inp, label])
-        delta = time.time() - start
-        print("Completed file: " + label + " in: " + str(delta) + " seconds!")
+            out.append([path, label])
+            outp_result[label] = SKIPPED
+            continue
+        try:
+            # Input is a new file that needs to be generated
+            # Needs to be in the image space, convert to kspace, undersample,
+            # then convert from kspace to image space
+            d = read_h5_unsafe(label)
+            # kspace = readKSpace(d)
+            # image = convert_to_image(kspace)
+            image = np.array(readImage(d))
+            print("Shape: " + str(image.shape))
+            if not unique_mask_per_slice:
+                mask = cr.poisson_trajectory(image[:, :, 0].shape, accelF)
+            for i in range(image.shape[2]):
+                if not i % rate:
+                    print("Starting undersample for slice: " + str(i))
+                if unique_mask_per_slice:
+                    image[:, :, i] = cr.image_undersampled_recon(image[:, :, i], accel_factor=accelF, recon_type='zero-fill')
+                else:
+                    kspace = sigpy.fft(image[:, :, i], center=True, norm='ortho')
+                    image[:, :, i] = sigpy.ifft(kspace * mask, center=True, norm='ortho')
+            with h5py.File(path, 'w') as fw:
+                # fw.create_dataset("data", image.shape, dtype='f4')
+                fw['data'] = image
+            d['_file'].close()
+            out.append([path, label])
+            delta = time.time() - start
+            print("Completed file: " + label + " in: " + str(delta) + " seconds!")
+            outp_result[label] = SUCCESS
+        except:
+            print("Failed to create file at path: " + path + " from label: " + label + "!")
+            outp_result[label] = FAILED
 
-    with open(dest_pkl, 'wb') as fw:
+    with open(dst_pkl, 'wb') as fw:
         pkl.dump(out, fw)
     print("Complete!")
-    # Returns the files that were NOT written to the data root
-    return olst[int(training_percentage * len(olst)) + 1:]
+    return outp_result
+
+def writeRootPickles(src, dst_train, dst_valid, dest_training_pkl="dataTrainingRoot.pkl", dest_validation_pkl="dataValidationRoot.pkl", training_percentage=0.8, unique_mask_per_slice=False, skip_existing=True):
+    olst = os.listdir(src)
+    # Get only valid training data
+    olst = [item for item in olst if item.endswith(".h5") or item.endswith(".im")]
+    # only the last few are saved for validation, not exactly optimal
+    d = {}
+    d['train'] = createRoot(src, dst_train, olst[:int(training_percentage * len(olst))], dest_training_pkl, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing)
+    d['valid'] = createRoot(src, dst_valid, olst[int(training_percentage * len(olst)) + 1:])
+    # Returns a json of the states for all files that were either written or not
+    return d
