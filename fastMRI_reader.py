@@ -103,7 +103,7 @@ def createRoot(src, dst, lst, dst_pkl, unique_mask_per_slice=False, skip_existin
         if os.path.exists(path) and skip_existing:
             print("Skipping file because it already exists!")
             out.append([path, label])
-            outp_result[label] = SKIPPED
+            outp_result[label] = {"status": SKIPPED, "time": time.time() - start}
             continue
         try:
             # Input is a new file that needs to be generated
@@ -131,10 +131,10 @@ def createRoot(src, dst, lst, dst_pkl, unique_mask_per_slice=False, skip_existin
             out.append([path, label])
             delta = time.time() - start
             print("Completed file: " + label + " in: " + str(delta) + " seconds!")
-            outp_result[label] = SUCCESS
+            outp_result[label] = {"status": SUCCESS, "time": delta}
         except:
             print("Failed to create file at path: " + path + " from label: " + label + "!")
-            outp_result[label] = FAILED
+            outp_result[label] = {"status": FAILED, "time": time.time() - start}
 
     with open(dst_pkl, 'wb') as fw:
         pkl.dump(out, fw)
@@ -148,6 +148,6 @@ def writeRootPickles(src, dst_train, dst_valid, dest_training_pkl="dataTrainingR
     # only the last few are saved for validation, not exactly optimal
     d = {}
     d['train'] = createRoot(src, dst_train, olst[:int(training_percentage * len(olst))], dest_training_pkl, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing)
-    d['valid'] = createRoot(src, dst_valid, olst[int(training_percentage * len(olst)) + 1:])
-    # Returns a json of the states for all files that were either written or not
+    d['valid'] = createRoot(src, dst_valid, olst[int(training_percentage * len(olst)) + 1:], dest_validation_pkl, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing)
+    # Returns a json of the states for all files that were either written or not, includes times for each conversion
     return d
