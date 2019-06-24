@@ -90,20 +90,22 @@ SKIPPED = "SKIPPED"
 SUCCESS = "CREATED AND COPIED"
 FAILED = "FAILED DUE TO EXCEPTION"
 
-def createRoot(src, dst, lst, dst_pkl, unique_mask_per_slice=False, skip_existing=True):
+def createRoot(src, dst, lst, dst_pkl, unique_mask_per_slice=False, skip_existing=True, verbose=False):
     rate = 10
     accelF = 12
     out = []
     outp_result = {}
+    ind = 0
     for f in lst:
         start = time.time()
         label = os.path.abspath(os.path.join(src, f))
-        print("Starting file: " + label)
+        print("Starting file: " + label + "(" + str(ind) + "/" + str(len(lst)) + ")")
         path = os.path.abspath(os.path.join(dst, f.replace(".im", "_undersampled.im").replace(".h5", "_undersampled.im")))
         if os.path.exists(path) and skip_existing:
             print("Skipping file because it already exists!")
             out.append([path, label])
             outp_result[label] = {"status": SKIPPED, "time": time.time() - start}
+            ind += 1
             continue
         try:
             # Input is a new file that needs to be generated
@@ -113,11 +115,12 @@ def createRoot(src, dst, lst, dst_pkl, unique_mask_per_slice=False, skip_existin
             # kspace = readKSpace(d)
             # image = convert_to_image(kspace)
             image = np.array(readImage(d))
-            print("Shape: " + str(image.shape))
+            if verbose:
+                print("Shape: " + str(image.shape))
             if not unique_mask_per_slice:
                 mask = cr.poisson_trajectory(image[:, :, 0].shape, accelF)
             for i in range(image.shape[2]):
-                if not i % rate:
+                if not i % rate and verbose:
                     print("Starting undersample for slice: " + str(i))
                 if unique_mask_per_slice:
                     image[:, :, i] = cr.image_undersampled_recon(image[:, :, i], accel_factor=accelF, recon_type='zero-fill')
@@ -135,19 +138,21 @@ def createRoot(src, dst, lst, dst_pkl, unique_mask_per_slice=False, skip_existin
         except:
             print("Failed to create file at path: " + path + " from label: " + label + "!")
             outp_result[label] = {"status": FAILED, "time": time.time() - start}
+        ind += 1
 
     with open(dst_pkl, 'wb') as fw:
         pkl.dump(out, fw)
     print("Complete!")
     return outp_result
 
-def writeRootPickles(src, dst_train, dst_valid, dest_training_pkl="dataTrainingRoot.pkl", dest_validation_pkl="dataValidationRoot.pkl", training_percentage=0.8, unique_mask_per_slice=False, skip_existing=True):
+def writeRootPickles(src, dst_train, dst_valid, dest_training_pkl="dataTrainingRoot.pkl", dest_validation_pkl="dataValidationRoot.pkl", training_percentage=0.8, unique_mask_per_slice=False, skip_existing=True, verbose=False):
     olst = os.listdir(src)
     # Get only valid training data
     olst = [item for item in olst if item.endswith(".h5") or item.endswith(".im")]
     # only the last few are saved for validation, not exactly optimal
     d = {}
-    d['train'] = createRoot(src, dst_train, olst[:int(training_percentage * len(olst))], dest_training_pkl, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing)
-    d['valid'] = createRoot(src, dst_valid, olst[int(training_percentage * len(olst)) + 1:], dest_validation_pkl, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing)
+    d['train'] = createRoot(src, dst_train, olst[:int(training_percentage * len(olst))], dest_training_pkl, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose)
+    print("=================================== STARTING VALIDATION CREATION ===================================")
+    d['valid'] = createRoot(src, dst_valid, olst[int(training_percentage * len(olst)) + 1:], dest_validation_pkl, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose)
     # Returns a json of the states for all files that were either written or not, includes times for each conversion
     return d
