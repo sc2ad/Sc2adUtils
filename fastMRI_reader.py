@@ -86,11 +86,13 @@ def writeKSpacesToDir(src, dist):
                 pkl.dump(kspace, fw)
             d['_file'].close()
 
-SKIPPED = "SKIPPED"
-SUCCESS = "CREATED AND COPIED"
-FAILED = "FAILED DUE TO EXCEPTION"
+messages = {"FULL_SUCCESS": "CREATED AND COPIED", "SUCCESS_SKIP": "SUCCESSFUL ADDITION, SKIPPED CREATION", "FAILED": "FAILED DUE TO EXCEPTION"}
 
-def createRoot(src, dst, lst, dst_pkl, unique_mask_per_slice=False, skip_existing=True, verbose=False):
+def createStatus(status):
+    messages = {}
+    return {"status": status, "message": messages.get(status, "UNKNOWN")}
+
+def createRootKSpace(src, dst, lst, dst_pkl, unique_mask_per_slice=False, skip_existing=True, verbose=False):
     rate = 10
     accelF = 12
     out = []
@@ -104,7 +106,7 @@ def createRoot(src, dst, lst, dst_pkl, unique_mask_per_slice=False, skip_existin
         if os.path.exists(path) and skip_existing:
             print("Skipping file because it already exists!")
             out.append([path, label])
-            outp_result[label] = {"status": SKIPPED, "time": time.time() - start}
+            outp_result[label] = {"status": createStatus("SUCCESS_SKIP"), "time": time.time() - start}
             ind += 1
             continue
         try:
@@ -134,10 +136,10 @@ def createRoot(src, dst, lst, dst_pkl, unique_mask_per_slice=False, skip_existin
             out.append([path, label])
             delta = time.time() - start
             print("Completed file: " + label + " in: " + str(delta) + " seconds!")
-            outp_result[label] = {"status": SUCCESS, "time": delta}
+            outp_result[label] = {"status": createStatus("FULL_SUCCESS"), "time": delta}
         except:
             print("Failed to create file at path: " + path + " from label: " + label + "!")
-            outp_result[label] = {"status": FAILED, "time": time.time() - start}
+            outp_result[label] = {"status": createStatus("FAILED"), "time": time.time() - start}
         ind += 1
 
     with open(dst_pkl, 'wb') as fw:
@@ -151,8 +153,8 @@ def writeRootPickles(src, dst_train, dst_valid, dest_training_pkl="dataTrainingR
     olst = [item for item in olst if item.endswith(".h5") or item.endswith(".im")]
     # only the last few are saved for validation, not exactly optimal
     d = {}
-    d['train'] = createRoot(src, dst_train, olst[:int(training_percentage * len(olst))], dest_training_pkl, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose)
+    d['train'] = createRootKSpace(src, dst_train, olst[:int(training_percentage * len(olst))], dest_training_pkl, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose)
     print("=================================== STARTING VALIDATION CREATION ===================================")
-    d['valid'] = createRoot(src, dst_valid, olst[int(training_percentage * len(olst)) + 1:], dest_validation_pkl, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose)
+    d['valid'] = createRootKSpace(src, dst_valid, olst[int(training_percentage * len(olst)) + 1:], dest_validation_pkl, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose)
     # Returns a json of the states for all files that were either written or not, includes times for each conversion
     return d
