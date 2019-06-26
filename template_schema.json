@@ -178,7 +178,8 @@
                 },
                 "loss": {
                     "description": "The loss to use",
-                    "type": "string"
+                    "type": "string",
+                    // ENUM
                 },
                 "metrics": {
                     "description": "The metrics to use",
@@ -198,13 +199,15 @@
                 },
                 "dataloader": {
                     "description": "The dataloader class to use",
-                    "type": "string"
+                    "type": "string",
+                    // ENUM
                 },
                 "comp": {
                     "description": "The comps to use",
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "type": "string",
+                        // ENUM
                     }
                 },
                 "key_slice": {

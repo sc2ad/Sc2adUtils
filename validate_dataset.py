@@ -8,6 +8,7 @@ import argparse
 
 ASSERTIONS = False
 # Validation Errors are AssertionErrors
+# THIS NEEDS MANY FIXES!!!
 
 def validate_dataset(files, config, verbose=False, printMod=20, fast=False):
     # For each set of files (input, output)
