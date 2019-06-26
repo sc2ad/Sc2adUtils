@@ -100,23 +100,25 @@ def createRootKSpace(src, dst, lst, dst_pkl, unique_mask_per_slice=False, skip_e
     ind = 0
     for f in lst:
         start = time.time()
-        label = os.path.abspath(os.path.join(src, f))
-        print("Starting file: " + label + "(" + str(ind) + "/" + str(len(lst)) + ")")
+        original = os.path.abspath(os.path.join(src, f))
+        print("Starting file: " + original + "(" + str(ind) + "/" + str(len(lst)) + ")")
         path = os.path.abspath(os.path.join(dst, f.replace(".im", "_undersampled.im").replace(".h5", "_undersampled.im")))
-        if os.path.exists(path) and skip_existing:
+        label = os.path.abspath(os.path.join(dst, f.replace(".im", "_original.im").replace(".seg", "_original.im")))
+        if skip_existing and os.path.exists(path) and os.path.exists(label):
             print("Skipping file because it already exists!")
             out.append([path, label])
-            outp_result[label] = {"status": createStatus("SUCCESS_SKIP"), "time": time.time() - start}
+            outp_result[original] = {"status": createStatus("SUCCESS_SKIP"), "time": time.time() - start}
             ind += 1
             continue
         try:
             # Input is a new file that needs to be generated
             # Needs to be in the image space, convert to kspace, undersample,
             # then convert from kspace to image space
-            d = read_h5_unsafe(label)
+            d = read_h5_unsafe(original)
             # kspace = readKSpace(d)
             # image = convert_to_image(kspace)
             image = np.array(readImage(d))
+            new_image = np.array(readImage(d))
             if verbose:
                 print("Shape: " + str(image.shape))
             if not unique_mask_per_slice:
@@ -129,17 +131,22 @@ def createRootKSpace(src, dst, lst, dst_pkl, unique_mask_per_slice=False, skip_e
                 else:
                     kspace = sigpy.fft(image[:, :, i], center=True, norm='ortho')
                     image[:, :, i] = sigpy.ifft(kspace * mask, center=True, norm='ortho')
+                kspace = sigpy.fft(image[:, :, i], center=True, norm='ortho')
+                new_image[:, :, i] = sigpy.ifft(kspace * mask, center=True, norm='ortho')
             with h5py.File(path, 'w') as fw:
                 # fw.create_dataset("data", image.shape, dtype='f4')
                 fw['data'] = image
+            with h5py.File(label, 'w') as fw:
+                fw['data'] = new_image
+            
             d['_file'].close()
             out.append([path, label])
             delta = time.time() - start
-            print("Completed file: " + label + " in: " + str(delta) + " seconds!")
-            outp_result[label] = {"status": createStatus("FULL_SUCCESS"), "time": delta}
+            print("Completed file: " + original + " in: " + str(delta) + " seconds!")
+            outp_result[original] = {"status": createStatus("FULL_SUCCESS"), "time": delta}
         except:
-            print("Failed to create file at path: " + path + " from label: " + label + "!")
-            outp_result[label] = {"status": createStatus("FAILED"), "time": time.time() - start}
+            print("Failed to create file at path: " + path + " from label: " + original + "!")
+            outp_result[original] = {"status": createStatus("FAILED"), "time": time.time() - start}
         ind += 1
 
     with open(dst_pkl, 'wb') as fw:
