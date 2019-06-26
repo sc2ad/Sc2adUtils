@@ -118,7 +118,7 @@ def createRootKSpace(src, dst, lst, dst_pkl, unique_mask_per_slice=False, skip_e
             # kspace = readKSpace(d)
             # image = convert_to_image(kspace)
             image = np.array(readImage(d))
-            new_image = np.array(readImage(d))
+            new_image = image.copy()
             if verbose:
                 print("Shape: " + str(image.shape))
             if not unique_mask_per_slice:
@@ -131,8 +131,8 @@ def createRootKSpace(src, dst, lst, dst_pkl, unique_mask_per_slice=False, skip_e
                 else:
                     kspace = sigpy.fft(image[:, :, i], center=True, norm='ortho')
                     image[:, :, i] = sigpy.ifft(kspace * mask, center=True, norm='ortho')
-                kspace = sigpy.fft(image[:, :, i], center=True, norm='ortho')
-                new_image[:, :, i] = sigpy.ifft(kspace * mask, center=True, norm='ortho')
+                kspace = sigpy.fft(new_image[:, :, i], center=True, norm='ortho')
+                new_image[:, :, i] = sigpy.ifft(kspace, center=True, norm='ortho')
             with h5py.File(path, 'w') as fw:
                 # fw.create_dataset("data", image.shape, dtype='f4')
                 fw['data'] = image
