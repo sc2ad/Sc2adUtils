@@ -144,6 +144,9 @@ def createRootKSpace(src, dst_orig, dst_under, lst, dst_pkl, unique_mask_per_sli
             delta = time.time() - start
             print("Completed file: " + original + " in: " + str(delta) + " seconds!")
             outp_result[original] = {"status": createStatus("FULL_SUCCESS"), "time": delta}
+        except KeyboardInterrupt:
+            print("Halting!")
+            raise KeyboardInterrupt
         except:
             print("Failed to create file at path: " + path + " from label: " + original + "!")
             outp_result[original] = {"status": createStatus("FAILED"), "time": time.time() - start}
