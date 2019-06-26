@@ -92,7 +92,7 @@ def createStatus(status):
     messages = {}
     return {"status": status, "message": messages.get(status, "UNKNOWN")}
 
-def createRootKSpace(src, dst, lst, dst_pkl, unique_mask_per_slice=False, skip_existing=True, verbose=False):
+def createRootKSpace(src, dst_orig, dst_under, lst, dst_pkl, unique_mask_per_slice=False, skip_existing=True, verbose=False):
     rate = 10
     accelF = 12
     out = []
@@ -102,8 +102,8 @@ def createRootKSpace(src, dst, lst, dst_pkl, unique_mask_per_slice=False, skip_e
         start = time.time()
         original = os.path.abspath(os.path.join(src, f))
         print("Starting file: " + original + "(" + str(ind) + "/" + str(len(lst)) + ")")
-        path = os.path.abspath(os.path.join(dst, f.replace(".im", "_undersampled.im").replace(".h5", "_undersampled.im")))
-        label = os.path.abspath(os.path.join(dst, f.replace(".im", "_original.im").replace(".seg", "_original.im")))
+        path = os.path.abspath(os.path.join(dst_under, f.replace(".im", "_undersampled.im").replace(".h5", "_undersampled.im")))
+        label = os.path.abspath(os.path.join(dst_orig, f.replace(".im", "_original.im").replace(".h5", "_original.im")))
         if skip_existing and os.path.exists(path) and os.path.exists(label):
             print("Skipping file because it already exists!")
             out.append([path, label])
@@ -154,14 +154,14 @@ def createRootKSpace(src, dst, lst, dst_pkl, unique_mask_per_slice=False, skip_e
     print("Complete!")
     return outp_result
 
-def writeRootPickles(src, dst_train, dst_valid, dest_training_pkl="dataTrainingRoot.pkl", dest_validation_pkl="dataValidationRoot.pkl", training_percentage=0.8, unique_mask_per_slice=False, skip_existing=True, verbose=False):
+def writeRootPickles(src, dst_train_orig, dst_train_under, dst_valid_orig, dst_valid_under, dest_training_pkl="dataTrainingRoot.pkl", dest_validation_pkl="dataValidationRoot.pkl", training_percentage=0.8, unique_mask_per_slice=False, skip_existing=True, verbose=False):
     olst = os.listdir(src)
     # Get only valid training data
     olst = [item for item in olst if item.endswith(".h5") or item.endswith(".im")]
     # only the last few are saved for validation, not exactly optimal
     d = {}
-    d['train'] = createRootKSpace(src, dst_train, olst[:int(training_percentage * len(olst))], dest_training_pkl, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose)
+    d['train'] = createRootKSpace(src, dst_train_orig, dst_train_under, olst[:int(training_percentage * len(olst))], dest_training_pkl, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose)
     print("=================================== STARTING VALIDATION CREATION ===================================")
-    d['valid'] = createRootKSpace(src, dst_valid, olst[int(training_percentage * len(olst)) + 1:], dest_validation_pkl, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose)
+    d['valid'] = createRootKSpace(src, dst_valid_orig, dst_valid_under, olst[int(training_percentage * len(olst)) + 1:], dest_validation_pkl, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose)
     # Returns a json of the states for all files that were either written or not, includes times for each conversion
     return d
