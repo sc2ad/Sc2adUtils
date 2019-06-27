@@ -57,10 +57,10 @@ def ifft2c(F):
     return np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(F)))
 
 def convert_to_image(kspace):
-    return np.array(fft2c(kspace), dtype=np.float32)
+    return np.array(np.abs(fft2c(kspace)), dtype=np.float32)
 
 def convert_to_kspace(image):
-    return np.array(ifft2c(image), dtype=np.float32)
+    return np.array(ifft2c(image))
 
 def show(image):
     plt.imshow(image)
