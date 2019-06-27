@@ -37,7 +37,7 @@ def center_crop(image, new_width=None, new_height=None):
         new_width = min(width, height)
     if new_height is None:
         new_height = min(width, height)
-    
+
     left = int(np.ceil((width - new_width) / 2))
     right = width - int(np.floor((width - new_width) / 2))
     top = int(np.ceil((height - new_height) / 2))
@@ -47,7 +47,7 @@ def center_crop(image, new_width=None, new_height=None):
         center_cropped_image = image[top:bottom, left:right]
     else:
         center_cropped_image = image[top:bottom, left:right, ...]
-    
+
     return center_cropped_image
 
 def fft2c(f):
@@ -142,7 +142,7 @@ def createRootKSpace(src, dst_orig, dst_under, lst, dst_pkl, replicate_orig=Fals
             if replicate_orig:
                 with h5py.File(label, 'w') as fw:
                     fw['data'] = new_image
-            
+
             d['_file'].close()
             out.append([path, label])
             delta = time.time() - start
@@ -152,7 +152,7 @@ def createRootKSpace(src, dst_orig, dst_under, lst, dst_pkl, replicate_orig=Fals
             print("Halting!")
             raise KeyboardInterrupt
         except:
-            print("Failed to create file at path: " + path + " from label: " + original + "!")
+            print("Failed to create file at path: " + path + " from original: " + original + " with label: " + label + "!")
             outp_result[original] = {"status": createStatus("FAILED"), "time": time.time() - start}
         ind += 1
 
@@ -172,3 +172,5 @@ def writeRootPickles(src, dst_train_orig, dst_train_under, dst_valid_orig, dst_v
     d['valid'] = createRootKSpace(src, dst_valid_orig, dst_valid_under, olst[int(training_percentage * len(olst)) + 1:], dest_validation_pkl, replicate_orig=replicate_orig, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose)
     # Returns a json of the states for all files that were either written or not, includes times for each conversion
     return d
+
+# a = r.writeRootPickles("/data/knee_mri4/DESS_data/vanillaCC_fixed", "/data/knee_mri5/Adam/fastMRI_Data/Training/original", "/data/knee_mri5/Adam/fastMRI_Data/Training/undersampled_12", "/data/knee_mri5/Adam/fastMRI_Data/Validation/original", "/data/knee_mri5/Adam/fastMRI_Data/Validation/undersampled_12")
