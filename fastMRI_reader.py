@@ -5,7 +5,6 @@ import os
 import pickle as pkl
 import compressed_sensing_recon as cr
 import time
-import sigpy
 
 def readParam_unsafe(dat, param):
     if type(dat) == str:
@@ -131,11 +130,11 @@ def createRootKSpace(src, dst_orig, dst_under, lst, dst_pkl, replicate_orig=Fals
                 if unique_mask_per_slice:
                     image[:, :, i] = cr.image_undersampled_recon(image[:, :, i], accel_factor=accelF, recon_type='zero-fill')
                 else:
-                    kspace = sigpy.fft(image[:, :, i], center=True, norm='ortho')
-                    image[:, :, i] = sigpy.ifft(kspace * mask, center=True, norm='ortho')
+                    kspace = convert_to_kspace(image[:, :, i])
+                    image[:, :, i] = convert_to_image(kspace * mask)
                 if replicate_orig:
-                    kspace = sigpy.fft(new_image[:, :, i], center=True, norm='ortho')
-                    new_image[:, :, i] = sigpy.ifft(kspace, center=True, norm='ortho')
+                    kspace = convert_to_kspace(new_image[:, :, i])
+                    new_image[:, :, i] = convert_to_image(kspace)
             with h5py.File(path, 'w') as fw:
                 # fw.create_dataset("data", image.shape, dtype='f4')
                 fw['data'] = image
