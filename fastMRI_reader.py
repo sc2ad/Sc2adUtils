@@ -120,7 +120,7 @@ def createRootKSpace(src, dst_orig, dst_under, lst, dst_pkl, abs_float32=False, 
             d = read_h5_unsafe(original)
             # kspace = readKSpace(d)
             # image = convert_to_image(kspace)
-            image = np.array(readImage(d), type=np.complex128)
+            image = np.array(readImage(d), dtype=np.complex128)
             new_image = image.copy()
             if verbose:
                 print("Shape: " + str(image.shape))
