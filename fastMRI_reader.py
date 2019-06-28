@@ -185,7 +185,7 @@ def writeMany(src, dst_train_top, dst_valid_top, undersamples=[12], training_per
         valid_undersampled = os.path.join(dst_valid_top, "undersampled_" + str(under))
         valid_pkl = os.path.join(dst_train_top, "validRoot_" + str(under))
 
-        d.append(writeRootPickles(src, train_orig, train_undersampled, valid_orig, valid_undersampled, dest_training_pkl=train_pkl, dest_validation_pkl=valid_pkl, accelF=under, training_percentage=training_percentage, replicate_orig=replicate_orig, unique_mask_per_slice=unqiue_mask_per_slice, skip_existing=skip_existing, verbose=verbose))
+        d.append(writeRootPickles(src, train_orig, train_undersampled, valid_orig, valid_undersampled, dest_training_pkl=train_pkl, dest_validation_pkl=valid_pkl, accelF=under, training_percentage=training_percentage, replicate_orig=replicate_orig, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose))
         replicate_orig = False
     return d
 
