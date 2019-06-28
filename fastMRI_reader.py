@@ -174,6 +174,14 @@ def writeRootPickles(src, dst_train_orig, dst_train_under, dst_valid_orig, dst_v
     olst = [item for item in olst if item.endswith(".h5") or item.endswith(".im")]
     # only the last few are saved for validation, not exactly optimal
     d = {}
+    if not os.path.exists(dst_train_orig):
+        os.mkdir(dst_train_orig)
+    if not os.path.exists(dst_train_under):
+        os.mkdir(dst_train_under)
+    if not os.path.exists(dst_valid_orig):
+        os.mkdir(dst_valid_orig)
+    if not os.path.exists(dst_valid_under):
+        os.mkdir(dst_valid_under)
     d['train'] = createRootKSpace(src, dst_train_orig, dst_train_under, olst[:int(training_percentage * len(olst))], dest_training_pkl, abs_float32=abs_float32, accelF=accelF, replicate_orig=replicate_orig, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose)
     print("=================================== STARTING VALIDATION CREATION ===================================")
     d['valid'] = createRootKSpace(src, dst_valid_orig, dst_valid_under, olst[int(training_percentage * len(olst)) + 1:], dest_validation_pkl, abs_float32=abs_float32, accelF=accelF, replicate_orig=replicate_orig, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose)
