@@ -94,7 +94,7 @@ def createStatus(status):
     messages = {}
     return {"status": status, "message": messages.get(status, "UNKNOWN")}
 
-def createRootKSpace(src, dst_orig, dst_under, lst, dst_pkl, accelF=12, replicate_orig=True, unique_mask_per_slice=False, skip_existing=True, verbose=False):
+def createRootKSpace(src, dst_orig, dst_under, lst, dst_pkl, abs_float32=False, accelF=12, replicate_orig=True, unique_mask_per_slice=False, skip_existing=True, verbose=False):
     rate = 10
     out = []
     outp_result = {}
@@ -133,10 +133,16 @@ def createRootKSpace(src, dst_orig, dst_under, lst, dst_pkl, accelF=12, replicat
                     image[:, :, i] = cr.image_undersampled_recon(image[:, :, i], accel_factor=accelF, recon_type='zero-fill')
                 else:
                     kspace = convert_to_kspace(image[:, :, i])
-                    image[:, :, i] = convert_to_image(kspace * mask)
+                    if abs_float32:
+                        image[:, :, i] = convert_to_abs_float32(kspace * mask)
+                    else:
+                        image[:, :, i] = convert_to_image(kspace * mask)
                 if replicate_orig:
                     kspace = convert_to_kspace(new_image[:, :, i])
-                    new_image[:, :, i] = convert_to_image(kspace)
+                    if abs_float32:
+                        new_image[:, :, i] = convert_to_abs_float32(kspace)
+                    else:
+                        new_image[:, :, i] = convert_to_image(kspace)
             with h5py.File(path, 'w') as fw:
                 # fw.create_dataset("data", image.shape, dtype='f4')
                 fw['data'] = image
@@ -162,30 +168,38 @@ def createRootKSpace(src, dst_orig, dst_under, lst, dst_pkl, accelF=12, replicat
     print("Complete!")
     return outp_result
 
-def writeRootPickles(src, dst_train_orig, dst_train_under, dst_valid_orig, dst_valid_under, dest_training_pkl="dataTrainingRoot.pkl", dest_validation_pkl="dataValidationRoot.pkl", accelF=12, training_percentage=0.8, replicate_orig=False, unique_mask_per_slice=False, skip_existing=True, verbose=False):
+def writeRootPickles(src, dst_train_orig, dst_train_under, dst_valid_orig, dst_valid_under, dest_training_pkl="dataTrainingRoot.pkl", dest_validation_pkl="dataValidationRoot.pkl", abs_float32=False, accelF=12, training_percentage=0.8, replicate_orig=False, unique_mask_per_slice=False, skip_existing=True, verbose=False):
     olst = os.listdir(src)
     # Get only valid training data
     olst = [item for item in olst if item.endswith(".h5") or item.endswith(".im")]
     # only the last few are saved for validation, not exactly optimal
     d = {}
-    d['train'] = createRootKSpace(src, dst_train_orig, dst_train_under, olst[:int(training_percentage * len(olst))], dest_training_pkl, accelF=accelF, replicate_orig=replicate_orig, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose)
+    d['train'] = createRootKSpace(src, dst_train_orig, dst_train_under, olst[:int(training_percentage * len(olst))], dest_training_pkl, abs_float32=abs_float32, accelF=accelF, replicate_orig=replicate_orig, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose)
     print("=================================== STARTING VALIDATION CREATION ===================================")
-    d['valid'] = createRootKSpace(src, dst_valid_orig, dst_valid_under, olst[int(training_percentage * len(olst)) + 1:], dest_validation_pkl, accelF=accelF, replicate_orig=replicate_orig, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose)
+    d['valid'] = createRootKSpace(src, dst_valid_orig, dst_valid_under, olst[int(training_percentage * len(olst)) + 1:], dest_validation_pkl, abs_float32=abs_float32, accelF=accelF, replicate_orig=replicate_orig, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose)
     # Returns a json of the states for all files that were either written or not, includes times for each conversion
     return d
 
-def writeMany(src, dst_train_top, dst_valid_top, undersamples=[12], training_percentage=0.8, unique_mask_per_slice=False, skip_existing=True, verbose=False):
+def writeMany(src, dst_train_top, dst_valid_top, undersamples=[12], abs_float32=False, training_percentage=0.8, unique_mask_per_slice=False, skip_existing=True, verbose=False):
     d = []
     replicate_orig = True
     for under in undersamples:
-        train_orig = os.path.join(dst_train_top, "original")
-        train_undersampled = os.path.join(dst_train_top, "undersampled_" + str(under))
-        train_pkl = os.path.join(dst_train_top, "trainingRoot_" + str(under))
-        valid_orig = os.path.join(dst_valid_top, "original")
-        valid_undersampled = os.path.join(dst_valid_top, "undersampled_" + str(under))
-        valid_pkl = os.path.join(dst_train_top, "validRoot_" + str(under))
+        if abs_float32:
+            train_orig = os.path.join(dst_train_top, "original_abs")
+            valid_orig = os.path.join(dst_valid_top, "original_abs")
+            train_undersampled = os.path.join(dst_train_top, "undersampled_" + str(under) + "_abs")
+            train_pkl = os.path.join(dst_train_top, "trainingRoot_" + str(under) + "_abs")
+            valid_undersampled = os.path.join(dst_valid_top, "undersampled_" + str(under) + "_abs")
+            valid_pkl = os.path.join(dst_train_top, "validRoot_" + str(under) + "_abs")
+        else:
+            train_orig = os.path.join(dst_train_top, "original_complex")
+            valid_orig = os.path.join(dst_valid_top, "original_complex")
+            train_undersampled = os.path.join(dst_train_top, "undersampled_" + str(under) + "_complex")
+            train_pkl = os.path.join(dst_train_top, "trainingRoot_" + str(under) + "_complex")
+            valid_undersampled = os.path.join(dst_valid_top, "undersampled_" + str(under) + "_complex")
+            valid_pkl = os.path.join(dst_train_top, "validRoot_" + str(under) + "_complex")
 
-        d.append(writeRootPickles(src, train_orig, train_undersampled, valid_orig, valid_undersampled, dest_training_pkl=train_pkl, dest_validation_pkl=valid_pkl, accelF=under, training_percentage=training_percentage, replicate_orig=replicate_orig, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose))
+        d.append(writeRootPickles(src, train_orig, train_undersampled, valid_orig, valid_undersampled, dest_training_pkl=train_pkl, dest_validation_pkl=valid_pkl, abs_float32=abs_float32, accelF=under, training_percentage=training_percentage, replicate_orig=replicate_orig, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose))
         replicate_orig = False
     return d
 
