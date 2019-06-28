@@ -56,13 +56,13 @@ def ifft2c(F):
     return np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(F)))
 
 def convert_to_image(kspace):
-    return np.array(fft2c(kspace))
+    return np.array(fft2c(kspace), dtype=np.complex128)
 
 def convert_to_abs_float32(complex_image):
     return np.array(np.abs(complex_image), dtype=np.float32)
 
 def convert_to_kspace(image):
-    return np.array(ifft2c(image))
+    return np.array(ifft2c(image), dtype=np.complex128)
 
 def show(image):
     plt.imshow(image)
@@ -120,7 +120,7 @@ def createRootKSpace(src, dst_orig, dst_under, lst, dst_pkl, accelF=12, replicat
             d = read_h5_unsafe(original)
             # kspace = readKSpace(d)
             # image = convert_to_image(kspace)
-            image = np.array(readImage(d))
+            image = np.array(readImage(d), type=np.complex128)
             new_image = image.copy()
             if verbose:
                 print("Shape: " + str(image.shape))
