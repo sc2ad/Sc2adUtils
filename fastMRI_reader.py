@@ -59,7 +59,7 @@ def convert_to_image(kspace):
     return np.array(fft2c(kspace), dtype=np.complex128)
 
 def convert_to_abs_float32(complex_image):
-    return np.array(np.abs(complex_image), dtype=np.float32)
+    return np.array(np.abs(convert_to_image(complex_image)), dtype=np.float32)
 
 def convert_to_kspace(image):
     return np.array(ifft2c(image), dtype=np.complex128)
