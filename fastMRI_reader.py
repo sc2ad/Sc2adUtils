@@ -158,8 +158,9 @@ def createRootKSpace(src, dst_orig, dst_under, lst, dst_pkl, abs_float32=False, 
         except KeyboardInterrupt:
             print("Halting!")
             raise KeyboardInterrupt
-        except:
+        except Exception as e:
             print("Failed to create file at path: " + path + " from original: " + original + " with label: " + label + "!")
+            print(e)
             outp_result[original] = {"status": createStatus("FAILED"), "time": time.time() - start}
         ind += 1
 
@@ -197,15 +198,15 @@ def writeMany(src, dst_train_top, dst_valid_top, undersamples=[12], abs_float32=
             valid_orig = os.path.join(dst_valid_top, "original_abs")
             train_undersampled = os.path.join(dst_train_top, "undersampled_" + str(under) + "_abs")
             train_pkl = os.path.join(dst_train_top, "trainingRoot_" + str(under) + "_abs")
-            valid_undersampled = os.path.join(dst_valid_top, "undersampled_" + str(under) + "_abs")
-            valid_pkl = os.path.join(dst_train_top, "validRoot_" + str(under) + "_abs")
+            valid_undersampled = os.path.join(dst_valid_top, "undersampled_" + str(under) + "_abs.pkl")
+            valid_pkl = os.path.join(dst_train_top, "validRoot_" + str(under) + "_abs.pkl")
         else:
             train_orig = os.path.join(dst_train_top, "original_complex")
             valid_orig = os.path.join(dst_valid_top, "original_complex")
             train_undersampled = os.path.join(dst_train_top, "undersampled_" + str(under) + "_complex")
             train_pkl = os.path.join(dst_train_top, "trainingRoot_" + str(under) + "_complex")
-            valid_undersampled = os.path.join(dst_valid_top, "undersampled_" + str(under) + "_complex")
-            valid_pkl = os.path.join(dst_train_top, "validRoot_" + str(under) + "_complex")
+            valid_undersampled = os.path.join(dst_valid_top, "undersampled_" + str(under) + "_complex.pkl")
+            valid_pkl = os.path.join(dst_train_top, "validRoot_" + str(under) + "_complex.pkl")
 
         d.append(writeRootPickles(src, train_orig, train_undersampled, valid_orig, valid_undersampled, dest_training_pkl=train_pkl, dest_validation_pkl=valid_pkl, abs_float32=abs_float32, accelF=under, training_percentage=training_percentage, replicate_orig=replicate_orig, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose))
         replicate_orig = False
