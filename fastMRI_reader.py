@@ -56,7 +56,10 @@ def ifft2c(F):
     return np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(F)))
 
 def convert_to_image(kspace):
-    return np.array(np.abs(fft2c(kspace)), dtype=np.float32)
+    return np.array(fft2c(kspace))
+
+def convert_to_abs_float32(complex_image):
+    return np.array(np.abs(complex_image), dtype=np.float32)
 
 def convert_to_kspace(image):
     return np.array(ifft2c(image))
@@ -91,9 +94,8 @@ def createStatus(status):
     messages = {}
     return {"status": status, "message": messages.get(status, "UNKNOWN")}
 
-def createRootKSpace(src, dst_orig, dst_under, lst, dst_pkl, replicate_orig=False, unique_mask_per_slice=False, skip_existing=True, verbose=False):
+def createRootKSpace(src, dst_orig, dst_under, lst, dst_pkl, accelF=12, replicate_orig=True, unique_mask_per_slice=False, skip_existing=True, verbose=False):
     rate = 10
-    accelF = 12
     out = []
     outp_result = {}
     ind = 0
@@ -160,16 +162,32 @@ def createRootKSpace(src, dst_orig, dst_under, lst, dst_pkl, replicate_orig=Fals
     print("Complete!")
     return outp_result
 
-def writeRootPickles(src, dst_train_orig, dst_train_under, dst_valid_orig, dst_valid_under, dest_training_pkl="dataTrainingRoot.pkl", dest_validation_pkl="dataValidationRoot.pkl", training_percentage=0.8, replicate_orig=False, unique_mask_per_slice=False, skip_existing=True, verbose=False):
+def writeRootPickles(src, dst_train_orig, dst_train_under, dst_valid_orig, dst_valid_under, dest_training_pkl="dataTrainingRoot.pkl", dest_validation_pkl="dataValidationRoot.pkl", accelF=12, training_percentage=0.8, replicate_orig=False, unique_mask_per_slice=False, skip_existing=True, verbose=False):
     olst = os.listdir(src)
     # Get only valid training data
     olst = [item for item in olst if item.endswith(".h5") or item.endswith(".im")]
     # only the last few are saved for validation, not exactly optimal
     d = {}
-    d['train'] = createRootKSpace(src, dst_train_orig, dst_train_under, olst[:int(training_percentage * len(olst))], dest_training_pkl, replicate_orig=replicate_orig, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose)
+    d['train'] = createRootKSpace(src, dst_train_orig, dst_train_under, olst[:int(training_percentage * len(olst))], dest_training_pkl, accelF=accelF, replicate_orig=replicate_orig, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose)
     print("=================================== STARTING VALIDATION CREATION ===================================")
-    d['valid'] = createRootKSpace(src, dst_valid_orig, dst_valid_under, olst[int(training_percentage * len(olst)) + 1:], dest_validation_pkl, replicate_orig=replicate_orig, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose)
+    d['valid'] = createRootKSpace(src, dst_valid_orig, dst_valid_under, olst[int(training_percentage * len(olst)) + 1:], dest_validation_pkl, accelF=accelF, replicate_orig=replicate_orig, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose)
     # Returns a json of the states for all files that were either written or not, includes times for each conversion
     return d
+
+def writeMany(src, dst_train_top, dst_valid_top, undersamples=[12], training_percentage=0.8, unique_mask_per_slice=False, skip_existing=True, verbose=False):
+    d = []
+    replicate_orig = True
+    for under in undersamples:
+        train_orig = os.path.join(dst_train_top, "original")
+        train_undersampled = os.path.join(dst_train_top, "undersampled_" + str(under))
+        train_pkl = os.path.join(dst_train_top, "trainingRoot_" + str(under))
+        valid_orig = os.path.join(dst_valid_top, "original")
+        valid_undersampled = os.path.join(dst_valid_top, "undersampled_" + str(under))
+        valid_pkl = os.path.join(dst_train_top, "validRoot_" + str(under))
+
+        d.append(writeRootPickles(src, train_orig, train_undersampled, valid_orig, valid_undersampled, dest_training_pkl=train_pkl, dest_validation_pkl=valid_pkl, accelF=under, training_percentage=training_percentage, replicate_orig=replicate_orig, unique_mask_per_slice=unqiue_mask_per_slice, skip_existing=skip_existing, verbose=verbose))
+        replicate_orig = False
+    return d
+
 
 # a = r.writeRootPickles("/data/knee_mri4/DESS_data/vanillaCC_fixed", "/data/knee_mri5/Adam/fastMRI_Data/Training/original", "/data/knee_mri5/Adam/fastMRI_Data/Training/undersampled_12", "/data/knee_mri5/Adam/fastMRI_Data/Validation/original", "/data/knee_mri5/Adam/fastMRI_Data/Validation/undersampled_12")
