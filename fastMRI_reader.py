@@ -199,14 +199,14 @@ def writeMany(src, dst_train_top, dst_valid_top, undersamples=[12], abs_float32=
             train_undersampled = os.path.join(dst_train_top, "undersampled_" + str(under) + "_abs")
             train_pkl = os.path.join(dst_train_top, "trainingRoot_" + str(under) + "_abs.pkl")
             valid_undersampled = os.path.join(dst_valid_top, "undersampled_" + str(under) + "_abs")
-            valid_pkl = os.path.join(dst_train_top, "validRoot_" + str(under) + "_abs.pkl")
+            valid_pkl = os.path.join(dst_valid_top, "validRoot_" + str(under) + "_abs.pkl")
         else:
             train_orig = os.path.join(dst_train_top, "original_complex")
             valid_orig = os.path.join(dst_valid_top, "original_complex")
             train_undersampled = os.path.join(dst_train_top, "undersampled_" + str(under) + "_complex")
             train_pkl = os.path.join(dst_train_top, "trainingRoot_" + str(under) + "_complex.pkl")
             valid_undersampled = os.path.join(dst_valid_top, "undersampled_" + str(under) + "_complex")
-            valid_pkl = os.path.join(dst_train_top, "validRoot_" + str(under) + "_complex.pkl")
+            valid_pkl = os.path.join(dst_valid_top, "validRoot_" + str(under) + "_complex.pkl")
 
         d.append(writeRootPickles(src, train_orig, train_undersampled, valid_orig, valid_undersampled, dest_training_pkl=train_pkl, dest_validation_pkl=valid_pkl, abs_float32=abs_float32, accelF=under, training_percentage=training_percentage, replicate_orig=replicate_orig, unique_mask_per_slice=unique_mask_per_slice, skip_existing=skip_existing, verbose=verbose))
         replicate_orig = False
