@@ -212,5 +212,6 @@ def writeMany(src, dst_train_top, dst_valid_top, undersamples=[12], abs_float32=
         replicate_orig = False
     return d
 
+# src = "/data/knee_mri4/DESS_data/vanillaCC_fixed"
 
 # a = r.writeRootPickles("/data/knee_mri4/DESS_data/vanillaCC_fixed", "/data/knee_mri5/Adam/fastMRI_Data/Training/original", "/data/knee_mri5/Adam/fastMRI_Data/Training/undersampled_12", "/data/knee_mri5/Adam/fastMRI_Data/Validation/original", "/data/knee_mri5/Adam/fastMRI_Data/Validation/undersampled_12")

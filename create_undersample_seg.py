@@ -35,7 +35,7 @@ def replace_images(src, dst):
             with open(pick, 'rb') as q:
                 arr = pkl.load(q)
             for s in arr:
-                if item.replace("_undersampled", "") in s[0]:
+                if item.replace("_undersampled", "").replace("_original", "") in s[0]:
                     new_arr.append([os.path.abspath(os.path.join(src, item)), s[1]])
                     print("Added new item with image path: " + os.path.join(src, item))
                     found = True
@@ -45,6 +45,22 @@ def replace_images(src, dst):
     with open(os.path.join(dst, "reconstructed.pkl"), 'wb') as d:
         print("Created file: " + os.path.join(dst, "reconstructed.pkl"))
         pkl.dump(new_arr, d)
+
+def create_accel_to_accel_data(src_lower, src_upper, dst):
+    new_arr = []
+    with open(src_lower, 'rb') as f:
+        low = pkl.load(f)
+    with open(src_upper, 'rb') as f:
+        high = pkl.load(f)
+    for item in low:
+        for pair in high:
+            if pair[0] == item[0]:
+                # Matching image names
+                print("Found matching item: " + pair[0])
+                new_arr.append([pair[0], item[0]])
+                break
+    with open(dst, 'wb') as f:
+        pkl.dump(new_arr, f)
 
 #if len(sys.argv) > 1:
 #    create(sys.argv[1])
